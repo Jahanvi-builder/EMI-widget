@@ -51,131 +51,199 @@
       padding: 28px 20px 64px;
     }
 
-    .topbar {
+    .store-header {
+      height: 58px;
+      border-bottom: 1px solid var(--page-border);
+      background: var(--page-surface);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 34px;
-      padding: 14px 18px;
-      border: 1px solid var(--page-border);
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.82);
-      backdrop-filter: blur(4px);
+      padding: 0 40px;
     }
-    .brand {
+    .store-logo {
       font-family: "Fraunces", serif;
-      font-size: 27px;
-      letter-spacing: -0.5px;
+      font-size: 21px;
+      letter-spacing: -0.4px;
+      color: #202020;
+      font-weight: 700;
     }
-    .brand span { color: var(--brand); }
-    .topbar-meta {
-      font-size: 13px;
-      color: var(--page-muted);
+    .store-logo span { color: #ca6a48; }
+    .store-nav {
+      display: flex;
+      gap: 32px;
+    }
+    .store-nav a {
+      text-decoration: none;
+      color: #746f69;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .store-cart {
+      color: #666;
+      font-size: 14px;
       font-weight: 600;
     }
 
-    .layout {
+    .pdp-wrap {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 46px 24px 70px;
+    }
+    .pdp-layout {
       display: grid;
       grid-template-columns: 1.1fr 1fr;
-      gap: 30px;
+      gap: 56px;
       align-items: start;
     }
-
-    .product-panel {
-      background: var(--page-surface);
-      border: 1px solid var(--page-border);
+    .gallery-main {
+      background: #d8d2cb;
       border-radius: 22px;
-      overflow: hidden;
-      box-shadow: 0 15px 40px rgba(27, 36, 52, 0.08);
-    }
-    .hero {
-      padding: 24px;
-      background:
-        linear-gradient(130deg, rgba(239,90,60,0.08), rgba(0,127,122,0.08)),
-        linear-gradient(160deg, #f4f7fb, #ebf0f7);
-      border-bottom: 1px solid var(--page-border);
-    }
-    .hero-card {
-      border: 1px solid #ccd8e8;
-      border-radius: 18px;
-      background: #ffffff;
-      padding: 14px;
-    }
-    .hero-top {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 14px;
+      height: 420px;
+      position: relative;
+      display: grid;
+      place-items: center;
     }
     .badge {
       font-size: 11px;
-      background: #141f31;
+      background: #c66a3f;
       color: #fff;
       border-radius: 999px;
       padding: 5px 10px;
       letter-spacing: 0.4px;
       font-weight: 700;
-    }
-    .hero-price {
-      font-family: "Fraunces", serif;
-      font-size: 38px;
-      line-height: 1;
-      letter-spacing: -1px;
-    }
-    .hero-price small {
-      font-family: "Manrope", sans-serif;
-      font-size: 15px;
-      color: #7f8ca0;
-      text-decoration: line-through;
-      margin-left: 8px;
-      letter-spacing: 0;
+      position: absolute;
+      top: 16px;
+      left: 16px;
     }
     .sofa {
-      height: 220px;
-      border-radius: 14px;
-      background:
-        radial-gradient(300px 120px at 80% 20%, #e2ebf8 0%, transparent 70%),
-        linear-gradient(145deg, #eef3f9, #e2e9f3);
+      height: 280px;
+      width: 88%;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.12);
       display: grid;
       place-items: center;
     }
-    .sofa svg { width: 78%; opacity: 0.68; }
+    .sofa svg { width: 70%; opacity: 0.5; }
+    .thumb-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .thumb {
+      height: 86px;
+      border-radius: 12px;
+      background: #ddd7d0;
+      border: 2px solid transparent;
+    }
+    .thumb.active { border-color: #1f1a16; }
 
-    .product-body { padding: 22px; }
+    .product-info { padding-top: 4px; }
     .kicker {
+      font-size: 62px;
+      font-family: "Fraunces", serif;
+      line-height: 1;
+      letter-spacing: -1px;
+      margin-bottom: 10px;
+    }
+    .price-compare {
+      margin-left: 10px;
+      text-decoration: line-through;
+      color: #a9a099;
+      font-size: 18px;
+      font-family: "Manrope", sans-serif;
+      letter-spacing: 0;
+      font-weight: 700;
+    }
+    .pre-kicker {
       font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: #6c7b93;
+      letter-spacing: 2px;
+      color: #706b66;
       font-weight: 700;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
     .title {
       font-family: "Fraunces", serif;
-      font-size: 36px;
+      font-size: 56px;
       line-height: 1.1;
       letter-spacing: -0.7px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     .sub {
       font-size: 14px;
-      color: var(--page-muted);
-      margin-bottom: 18px;
+      color: #6a655f;
+      margin-bottom: 14px;
+      font-weight: 500;
     }
-    .benefits {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+    .rating-row {
+      display: flex;
+      align-items: center;
       gap: 8px;
       margin-bottom: 22px;
+      color: #807970;
+      font-size: 14px;
+    }
+    .stars {
+      color: #d28f34;
+      letter-spacing: 1px;
+      font-size: 16px;
+    }
+    .save-pill {
+      display: inline-block;
+      margin: 10px 0 22px;
+      font-size: 13px;
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: #dff2e8;
+      color: #3b875c;
+      font-weight: 700;
+    }
+    .swatch-title {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.4px;
+      color: #6d665f;
+      margin-bottom: 10px;
+    }
+    .swatch-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .swatch {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      padding: 2px;
+      cursor: pointer;
+      background: transparent;
+    }
+    .swatch.active { border-color: #24201c; }
+    .swatch-core {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+    .benefits {
+      display: flex;
+      gap: 26px;
+      margin-top: 20px;
+      flex-wrap: wrap;
     }
     .benefit {
-      border: 1px solid var(--page-border);
-      border-radius: 12px;
-      padding: 10px;
       font-size: 12px;
-      color: var(--page-muted);
-      text-align: center;
+      color: #756f68;
       font-weight: 600;
-      background: #fbfdff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .benefit::before {
+      content: "✓";
+      color: #3d875f;
     }
     .cta {
       display: grid;
@@ -191,32 +259,31 @@
     }
     .btn:active { transform: scale(0.985); }
     .btn-primary {
-      background: #121f33;
+      background: #171210;
       color: #fff;
-      padding: 15px 20px;
-      font-size: 15px;
+      padding: 16px 22px;
+      font-size: 16px;
+      border-radius: 14px;
     }
-    .btn-primary:hover { background: #1c2d47; }
+    .btn-primary:hover { background: #2a231e; }
 
     .paypace {
-      border: 1px solid #b8cbe4;
-      border-radius: 16px;
+      border: 1px solid #dfddd7;
+      border-radius: 14px;
       padding: 14px;
       display: flex;
       align-items: center;
       gap: 12px;
       cursor: pointer;
-      background:
-        linear-gradient(120deg, rgba(0,127,122,0.1), rgba(0,127,122,0)),
-        #fff;
+      background: #fff;
       position: relative;
       overflow: hidden;
       transition: all .22s;
     }
     .paypace:hover {
-      border-color: #4e96b8;
+      border-color: #6b9f98;
       transform: translateY(-1px);
-      box-shadow: 0 10px 24px rgba(25, 75, 121, .14);
+      box-shadow: 0 8px 16px rgba(57, 103, 84, .12);
     }
     .paypace-icon {
       width: 42px;
@@ -225,7 +292,7 @@
       display: grid;
       place-items: center;
       flex-shrink: 0;
-      background: linear-gradient(145deg, #007f7a, #046b67);
+      background: linear-gradient(145deg, #2c6f72, #235d62);
       color: #fff;
     }
     .paypace-title {
@@ -234,13 +301,13 @@
     }
     .paypace-sub {
       font-size: 12px;
-      color: #4f637e;
+      color: #5b666c;
       margin-top: 1px;
       font-weight: 600;
     }
     .mini-badge {
-      font-size: 11px;
-      color: #6b7d97;
+      font-size: 12px;
+      color: #a5a29c;
       margin-top: 6px;
     }
 
@@ -855,77 +922,108 @@
     .hidden { display: none !important; }
 
     @media (max-width: 900px) {
-      .layout { grid-template-columns: 1fr; }
+      .store-nav { display: none; }
+      .store-header { padding: 0 16px; }
+      .pdp-wrap { padding: 22px 14px 52px; }
+      .pdp-layout { grid-template-columns: 1fr; gap: 24px; }
+      .gallery-main { height: 280px; }
+      .thumb { height: 64px; }
+      .title { font-size: 40px; }
+      .sub { font-size: 14px; }
+      .kicker { font-size: 44px; }
+      .btn-primary { font-size: 15px; padding: 14px 18px; }
+      .paypace-title { font-size: 18px; }
+      .paypace-sub { font-size: 13px; }
       .overlay { padding: 0; align-items: stretch; }
       .widget {
         width: 100%;
         height: 100dvh;
         border-radius: 0;
       }
-      .title { font-size: 32px; }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <header class="topbar">
-      <div class="brand">Forma<span>Home</span></div>
-      <div class="topbar-meta">Cart: 1 item · Secure checkout</div>
-    </header>
+  <header class="store-header">
+    <div class="store-logo">Liv<span>Space</span></div>
+    <nav class="store-nav">
+      <a href="#">Living</a>
+      <a href="#">Bedroom</a>
+      <a href="#">Dining</a>
+      <a href="#">Decor</a>
+      <a href="#">Sale</a>
+    </nav>
+    <div class="store-cart">🛒 Cart (1)</div>
+  </header>
 
-    <div class="layout">
-      <section class="product-panel">
-        <div class="hero">
-          <div class="hero-card">
-            <div class="hero-top">
-              <span class="badge">EDITOR PICK</span>
-              <div class="hero-price">₹74,999 <small>₹89,999</small></div>
-            </div>
-            <div class="sofa">
-              <svg viewBox="0 0 220 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="12" y="66" width="196" height="50" rx="9" fill="#8A775F" opacity="0.5"/>
-                <rect x="24" y="42" width="76" height="56" rx="8" fill="#A28A70" opacity="0.58"/>
-                <rect x="120" y="42" width="76" height="56" rx="8" fill="#A28A70" opacity="0.58"/>
-                <rect x="23" y="35" width="174" height="17" rx="8" fill="#806D57" opacity="0.46"/>
-                <rect x="12" y="98" width="22" height="18" rx="5" fill="#6E5C48" opacity="0.58"/>
-                <rect x="186" y="98" width="22" height="18" rx="5" fill="#6E5C48" opacity="0.58"/>
-                <rect x="12" y="66" width="22" height="52" rx="8" fill="#846F59" opacity="0.55"/>
-                <rect x="186" y="66" width="22" height="52" rx="8" fill="#846F59" opacity="0.55"/>
+  <div class="pdp-wrap">
+    <section class="pdp-layout">
+      <div>
+        <div class="gallery-main">
+          <span class="badge">New Arrival</span>
+          <div class="sofa">
+            <svg viewBox="0 0 220 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="12" y="66" width="196" height="50" rx="9" fill="#8A775F" opacity="0.5"/>
+              <rect x="24" y="42" width="76" height="56" rx="8" fill="#A28A70" opacity="0.58"/>
+              <rect x="120" y="42" width="76" height="56" rx="8" fill="#A28A70" opacity="0.58"/>
+              <rect x="23" y="35" width="174" height="17" rx="8" fill="#806D57" opacity="0.46"/>
+              <rect x="12" y="98" width="22" height="18" rx="5" fill="#6E5C48" opacity="0.58"/>
+              <rect x="186" y="98" width="22" height="18" rx="5" fill="#6E5C48" opacity="0.58"/>
+              <rect x="12" y="66" width="22" height="52" rx="8" fill="#846F59" opacity="0.55"/>
+              <rect x="186" y="66" width="22" height="52" rx="8" fill="#846F59" opacity="0.55"/>
+            </svg>
+          </div>
+        </div>
+        <div class="thumb-row">
+          <div class="thumb active"></div>
+          <div class="thumb"></div>
+          <div class="thumb"></div>
+          <div class="thumb"></div>
+        </div>
+      </div>
+
+      <div class="product-info">
+        <div class="pre-kicker">Sofas & Sectionals</div>
+        <h1 class="title">Osaka Sectional Sofa</h1>
+        <div class="sub">Premium Fabric · 5-Seater · 280cm</div>
+        <div class="rating-row"><span class="stars">★★★★★</span> 4.8 · 214 reviews</div>
+
+        <div class="kicker">₹74,999 <span class="price-compare">₹89,999</span></div>
+        <div class="save-pill">Save ₹15,000 (16% off)</div>
+
+        <div class="swatch-title">Colour</div>
+        <div class="swatch-row">
+          <button class="swatch active" aria-label="Brown"><span class="swatch-core" style="background:#8B7355"></span></button>
+          <button class="swatch" aria-label="Blue"><span class="swatch-core" style="background:#4A6580"></span></button>
+          <button class="swatch" aria-label="Maroon"><span class="swatch-core" style="background:#5A3A3A"></span></button>
+          <button class="swatch" aria-label="Green"><span class="swatch-core" style="background:#2D4A3A"></span></button>
+        </div>
+
+        <div class="cta">
+          <button class="btn btn-primary">Add to Cart — ₹74,999</button>
+
+          <div class="paypace" onclick="openWidget()">
+            <div class="paypace-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 7v5l3.5 2"></path>
               </svg>
             </div>
-          </div>
-        </div>
-        <div class="product-body">
-          <div class="kicker">Sofas & Sectionals</div>
-          <h1 class="title">Osaka Sectional Sofa</h1>
-          <div class="sub">Premium Fabric · 5-Seater · 280cm · 4.8 rating (214)</div>
-
-          <div class="benefits">
-            <div class="benefit">Free Delivery</div>
-            <div class="benefit">30-Day Returns</div>
-            <div class="benefit">3-Year Warranty</div>
-          </div>
-
-          <div class="cta">
-            <button class="btn btn-primary">Add to Cart — ₹74,999</button>
-
-            <div class="paypace" onclick="openWidget()">
-              <div class="paypace-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-                  <circle cx="12" cy="12" r="9"></circle>
-                  <path d="M12 7v5l3.5 2"></path>
-                </svg>
-              </div>
-              <div>
-                <div class="paypace-title">Pay at Your Pace · EMI from ₹6,249/mo</div>
-                <div class="paypace-sub">Chat setup takes ~30 seconds · no paperwork</div>
-                <div class="mini-badge">Powered by Pine Labs · PCI-DSS secured</div>
-              </div>
+            <div>
+              <div class="paypace-title">Pay at Your Pace — EMI from ₹6,249/mo</div>
+              <div class="paypace-sub">Chat with our agent · Takes <strong>30 seconds</strong> · Zero paperwork</div>
+              <div class="mini-badge">Powered by Pine Labs · PCI-DSS Secured · Your card details are never shared with this chat</div>
             </div>
           </div>
         </div>
-      </section>
-    </div>
+
+        <div class="benefits">
+          <div class="benefit">Free delivery</div>
+          <div class="benefit">30-day returns</div>
+          <div class="benefit">3-year warranty</div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
