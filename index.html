@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pay At Your Pace Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --page-bg: #f2f5f8;
+      --page-surface: #ffffff;
+      --page-text: #111827;
+      --page-muted: #5b6677;
+      --page-border: #dde4ee;
+      --brand: #ef5a3c;
+      --brand-soft: #ffe8e2;
+      --action: #007f7a;
+      --action-soft: #dcf4f2;
+      --success: #1c8f59;
+      --success-soft: #dff5ea;
+      --warning: #9b5a00;
+      --widget-bg: #f8fcfa;
+      --widget-surface: #ffffff;
+      --widget-surface-2: #f4faf7;
+      --widget-text: #163a2f;
+      --widget-muted: #4f7064;
+      --widget-border: #cfe2d8;
+      --widget-highlight: #0f775c;
+      --widget-user: #e9f5ef;
+      --shadow-lg: 0 24px 52px rgba(14, 58, 40, 0.14);
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "Manrope", sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -20%, #d8e6f7 0%, transparent 60%),
+        radial-gradient(900px 500px at 95% 10%, #f8dfd8 0%, transparent 55%),
+        var(--page-bg);
+      color: var(--page-text);
+      overflow-x: hidden;
+    }
+
+    .shell {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 20px 64px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 34px;
+      padding: 14px 18px;
+      border: 1px solid var(--page-border);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(4px);
+    }
+    .brand {
+      font-family: "Fraunces", serif;
+      font-size: 27px;
+      letter-spacing: -0.5px;
+    }
+    .brand span { color: var(--brand); }
+    .topbar-meta {
+      font-size: 13px;
+      color: var(--page-muted);
+      font-weight: 600;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 30px;
+      align-items: start;
+    }
+
+    .product-panel {
+      background: var(--page-surface);
+      border: 1px solid var(--page-border);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 15px 40px rgba(27, 36, 52, 0.08);
+    }
+    .hero {
+      padding: 24px;
+      background:
+        linear-gradient(130deg, rgba(239,90,60,0.08), rgba(0,127,122,0.08)),
+        linear-gradient(160deg, #f4f7fb, #ebf0f7);
+      border-bottom: 1px solid var(--page-border);
+    }
+    .hero-card {
+      border: 1px solid #ccd8e8;
+      border-radius: 18px;
+      background: #ffffff;
+      padding: 14px;
+    }
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .badge {
+      font-size: 11px;
+      background: #141f31;
+      color: #fff;
+      border-radius: 999px;
+      padding: 5px 10px;
+      letter-spacing: 0.4px;
+      font-weight: 700;
+    }
+    .hero-price {
+      font-family: "Fraunces", serif;
+      font-size: 38px;
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+    .hero-price small {
+      font-family: "Manrope", sans-serif;
+      font-size: 15px;
+      color: #7f8ca0;
+      text-decoration: line-through;
+      margin-left: 8px;
+      letter-spacing: 0;
+    }
+    .sofa {
+      height: 220px;
+      border-radius: 14px;
+      background:
+        radial-gradient(300px 120px at 80% 20%, #e2ebf8 0%, transparent 70%),
+        linear-gradient(145deg, #eef3f9, #e2e9f3);
+      display: grid;
+      place-items: center;
+    }
+    .sofa svg { width: 78%; opacity: 0.68; }
+
+    .product-body { padding: 22px; }
+    .kicker {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #6c7b93;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .title {
+      font-family: "Fraunces", serif;
+      font-size: 36px;
+      line-height: 1.1;
+      letter-spacing: -0.7px;
+      margin-bottom: 8px;
+    }
+    .sub {
+      font-size: 14px;
+      color: var(--page-muted);
+      margin-bottom: 18px;
+    }
+    .benefits {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+    .benefit {
+      border: 1px solid var(--page-border);
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 12px;
+      color: var(--page-muted);
+      text-align: center;
+      font-weight: 600;
+      background: #fbfdff;
+    }
+    .cta {
+      display: grid;
+      gap: 12px;
+    }
+    .btn {
+      border: none;
+      cursor: pointer;
+      font-family: "Manrope", sans-serif;
+      font-weight: 700;
+      border-radius: 12px;
+      transition: transform .16s, box-shadow .16s, background .2s;
+    }
+    .btn:active { transform: scale(0.985); }
+    .btn-primary {
+      background: #121f33;
+      color: #fff;
+      padding: 15px 20px;
+      font-size: 15px;
+    }
+    .btn-primary:hover { background: #1c2d47; }
+
+    .paypace {
+      border: 1px solid #b8cbe4;
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      background:
+        linear-gradient(120deg, rgba(0,127,122,0.1), rgba(0,127,122,0)),
+        #fff;
+      position: relative;
+      overflow: hidden;
+      transition: all .22s;
+    }
+    .paypace:hover {
+      border-color: #4e96b8;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(25, 75, 121, .14);
+    }
+    .paypace-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      background: linear-gradient(145deg, #007f7a, #046b67);
+      color: #fff;
+    }
+    .paypace-title {
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .paypace-sub {
+      font-size: 12px;
+      color: #4f637e;
+      margin-top: 1px;
+      font-weight: 600;
+    }
+    .mini-badge {
+      font-size: 11px;
+      color: #6b7d97;
+      margin-top: 6px;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 8, 23, .6);
+      backdrop-filter: blur(6px);
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s;
+      z-index: 50;
+    }
+    .overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .widget {
+      width: 418px;
+      height: 650px;
+      background: linear-gradient(160deg, #ffffff, #eef8f3);
+      border-radius: 24px;
+      border: 1px solid #b9dbc9;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      transform: translateY(22px) scale(.97);
+      transition: transform .34s cubic-bezier(.22,1.2,.43,1);
+    }
+    .overlay.open .widget { transform: translateY(0) scale(1); }
+
+    .w-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--widget-border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(140deg, #f8fcfa, #f1f8f4);
+    }
+    .w-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: linear-gradient(145deg, #4de2c5, #20b49b);
+      display: grid;
+      place-items: center;
+      color: #0b1b2f;
+      flex-shrink: 0;
+      font-weight: 900;
+      font-size: 13px;
+    }
+    .w-name {
+      color: var(--widget-text);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .w-status {
+      color: var(--widget-highlight);
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--widget-highlight);
+      animation: pulse 2s infinite;
+    }
+    .w-close {
+      margin-left: auto;
+      background: #eef7f2;
+      border: 1px solid #cfe2d8;
+      color: var(--widget-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      cursor: pointer;
+    }
+
+    .w-order {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--widget-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--widget-muted);
+      font-size: 12px;
+      background: #eef8f3;
+    }
+    .w-order strong {
+      color: var(--widget-highlight);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 14px;
+    }
+
+    .w-note {
+      padding: 8px 16px;
+      font-size: 11px;
+      color: #6e4f18;
+      border-bottom: 1px solid var(--widget-border);
+      background: #fff4dc;
+      line-height: 1.4;
+    }
+
+    .messages {
+      flex: 1;
+      min-height: 0;
+      padding: 14px 14px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: scroll;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      overscroll-behavior: contain;
+    }
+    .messages::-webkit-scrollbar { width: 4px; }
+    .messages::-webkit-scrollbar-thumb {
+      background: #9eb8ad;
+      border-radius: 3px;
+    }
+
+    .m {
+      max-width: 88%;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      animation: slideIn .25s ease;
+    }
+    .m.agent { align-self: flex-start; }
+    .m.user { align-self: flex-end; }
+    .bubble {
+      border-radius: 15px;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      border: 1px solid transparent;
+    }
+    .m.agent .bubble {
+      background: var(--widget-surface);
+      border-color: var(--widget-border);
+      color: var(--widget-text);
+      border-bottom-left-radius: 4px;
+    }
+    .m.user .bubble {
+      background: var(--widget-user);
+      color: var(--widget-text);
+      border-bottom-right-radius: 4px;
+    }
+    .time {
+      color: var(--widget-muted);
+      font-size: 10px;
+      padding: 0 2px;
+    }
+    .m.user .time { text-align: right; }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(7px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .typing {
+      align-self: flex-start;
+      background: var(--widget-surface);
+      border: 1px solid var(--widget-border);
+      border-radius: 14px;
+      border-bottom-left-radius: 4px;
+      padding: 10px 12px;
+      display: flex;
+      gap: 4px;
+    }
+    .typing span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--widget-muted);
+      animation: bounce 1s infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: .15s; }
+    .typing span:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-4px); }
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      animation: slideIn .25s ease;
+    }
+    .chip {
+      border: 1px solid #a8c9ba;
+      color: #245f4d;
+      background: #ecf7f2;
+      font-size: 12px;
+      border-radius: 999px;
+      padding: 7px 12px;
+      cursor: pointer;
+      font-weight: 700;
+      font-family: "Manrope", sans-serif;
+      transition: all .2s;
+    }
+    .chip:hover {
+      border-color: #8eb8a5;
+      background: #dff2e9;
+      transform: translateY(-1px);
+    }
+
+    .plans {
+      display: grid;
+      gap: 8px;
+      width: 100%;
+    }
+    .compare-wrap {
+      width: 100%;
+      border: 1px solid #bfd7cc;
+      border-radius: 12px;
+      overflow: visible;
+      background: #fbfefd;
+      animation: slideIn .25s ease;
+      margin-bottom: 2px;
+    }
+    .compare-scroll {
+      height: auto;
+      overflow: visible;
+    }
+    .compare-scroll::-webkit-scrollbar { width: 4px; }
+    .compare-scroll::-webkit-scrollbar-thumb {
+      background: #9eb8ad;
+      border-radius: 999px;
+    }
+    .compare-table {
+      width: 100%;
+      min-width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .compare-table th,
+    .compare-table td {
+      border-right: 1px solid #d4e5dc;
+      border-bottom: 1px solid #d4e5dc;
+      padding: 6px;
+      vertical-align: top;
+    }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-table th:last-child,
+    .compare-table td:last-child { border-right: none; }
+    .compare-table thead th {
+      color: var(--widget-text);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      text-align: left;
+      background: #f1f8f4;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .tenure-head {
+      width: 58px;
+      color: var(--widget-muted);
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.4px;
+    }
+    .tenure-cell {
+      color: var(--widget-muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+      background: #f4faf7;
+    }
+    .compare-cell-btn {
+      width: 100%;
+      text-align: left;
+      border: 1px solid #b8d4c6;
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 7px;
+      color: var(--widget-text);
+      cursor: pointer;
+      transition: all .18s;
+      min-height: 64px;
+      touch-action: pan-y;
+    }
+    .compare-cell-btn:hover {
+      border-color: #8db8a4;
+      background: #eef8f3;
+      transform: translateY(-1px);
+    }
+    .compare-cell-btn.na {
+      cursor: default;
+      color: #587568;
+      border-style: dashed;
+      border-color: #c9ddd3;
+      background: #f4faf7;
+    }
+    .compare-amt {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 3px;
+    }
+    .compare-meta {
+      display: block;
+      font-size: 10px;
+      color: var(--widget-muted);
+      line-height: 1.25;
+    }
+    .compare-pill {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 9px;
+      border-radius: 999px;
+      padding: 2px 6px;
+      font-weight: 700;
+      background: #d8f3e8;
+      color: #1f7d62;
+    }
+    .compare-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 10px;
+      border-top: 1px solid #cfe2d8;
+      background: #f3faf6;
+    }
+    .plan {
+      border: 1px solid var(--widget-border);
+      border-radius: 13px;
+      padding: 12px;
+      background: var(--widget-surface);
+      cursor: pointer;
+      transition: all .2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .plan:hover {
+      border-color: #8db8a4;
+      background: #eef8f3;
+    }
+    .plan.popular::after {
+      content: "Popular";
+      position: absolute;
+      top: 0;
+      right: 0;
+      font-size: 9px;
+      font-weight: 800;
+      color: #113126;
+      background: #36c6a4;
+      padding: 3px 8px;
+      border-bottom-left-radius: 8px;
+      letter-spacing: .4px;
+    }
+    .plan-top {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+      margin-bottom: 6px;
+    }
+    .plan-amt {
+      font-family: "Fraunces", serif;
+      font-size: 24px;
+      color: var(--widget-text);
+      letter-spacing: -.6px;
+    }
+    .plan-term {
+      font-size: 12px;
+      color: var(--widget-muted);
+    }
+    .plan-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-size: 10px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+    .tag.free { background: #dff3e8; color: #1f7d62; }
+    .tag.interest { background: #fff1dc; color: #8a5b12; }
+    .tag.offer { background: #dff4ef; color: #1e7d67; }
+
+    .confirm {
+      border: 1px solid #bfd8cc;
+      border-radius: 14px;
+      padding: 14px;
+      background: linear-gradient(180deg, #f6fbf8, #eef8f3);
+      width: 100%;
+    }
+    .confirm h4 {
+      color: #3f6657;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    .row span:first-child { color: var(--widget-muted); }
+    .row span:last-child { color: var(--widget-text); font-weight: 700; }
+    .row strong {
+      font-family: "IBM Plex Mono", monospace;
+      color: var(--widget-highlight);
+      font-size: 14px;
+      letter-spacing: -.2px;
+    }
+    .rule {
+      height: 1px;
+      border: none;
+      background: var(--widget-border);
+      margin: 10px 0;
+    }
+    .pay-btn {
+      width: 100%;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-family: "Manrope", sans-serif;
+      font-weight: 800;
+      cursor: pointer;
+      background: linear-gradient(130deg, #4de2c5, #2bd0ae);
+      color: #03201a;
+      margin-top: 8px;
+    }
+    .mobile-label {
+      display: block;
+      color: var(--widget-muted);
+      font-size: 11px;
+      margin-bottom: 7px;
+    }
+    .mobile-input {
+      width: 100%;
+      border: 1px solid #b2d0c1;
+      border-radius: 10px;
+      background: #ffffff;
+      color: var(--widget-text);
+      font-family: "Manrope", sans-serif;
+      font-size: 13px;
+      padding: 11px 12px;
+      outline: none;
+    }
+    .mobile-input:focus {
+      border-color: #72b497;
+      box-shadow: 0 0 0 2px rgba(114, 180, 151, 0.18);
+    }
+    .mobile-help {
+      margin-top: 8px;
+      color: #56766a;
+      font-size: 10.5px;
+      line-height: 1.4;
+    }
+    .input-error {
+      margin-top: 6px;
+      color: #b94f4f;
+      font-size: 11px;
+      min-height: 14px;
+    }
+    .change-btn {
+      width: 100%;
+      border: 1px solid #9ec8b7;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: "Manrope", sans-serif;
+      color: #2f6a57;
+      background: #eaf6f0;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all .2s;
+    }
+    .change-btn:hover {
+      background: #dff1e8;
+      border-color: #88bca7;
+      color: #235745;
+    }
+    .change-btn:active {
+      transform: translateY(1px);
+    }
+
+    .input-wrap {
+      border-top: 1px solid var(--widget-border);
+      padding: 12px 14px 14px;
+      background: #f1f8f4;
+    }
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: end;
+    }
+    textarea {
+      width: 100%;
+      border: 1px solid #a1ccb8;
+      border-radius: 12px;
+      background: #f6fffb;
+      color: var(--widget-text);
+      font-size: 13px;
+      font-family: "Manrope", sans-serif;
+      padding: 10px 11px;
+      min-height: 42px;
+      max-height: 96px;
+      resize: none;
+      outline: none;
+      line-height: 1.4;
+    }
+    textarea::placeholder { color: #557569; }
+    textarea:focus { border-color: #64bc95; }
+    .send {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background: #4de2c5;
+      color: #0d1e31;
+      font-weight: 900;
+    }
+    .send:disabled {
+      background: #a9c4b8;
+      cursor: not-allowed;
+    }
+    .foot {
+      margin-top: 7px;
+      text-align: center;
+      font-size: 10px;
+      color: #4f7064;
+    }
+
+    .success {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 24px;
+      gap: 15px;
+      animation: slideIn .3s ease;
+    }
+    .check {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(28,143,89,.22);
+      color: #1f8a6c;
+      font-size: 28px;
+      margin: 0 auto;
+      border: 1px solid rgba(31, 138, 108, 0.25);
+      position: relative;
+    }
+    .sent-badge {
+      position: absolute;
+      right: -5px;
+      top: -5px;
+      font-size: 10px;
+      line-height: 1;
+      color: #0f775c;
+      background: #e6f5ef;
+      border: 1px solid #b9dbc9;
+      border-radius: 999px;
+      padding: 3px 6px;
+      font-weight: 800;
+    }
+    .sent-time {
+      margin-top: -4px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--widget-muted);
+      font-weight: 600;
+    }
+    .success h3 {
+      font-family: "Fraunces", serif;
+      color: var(--widget-text);
+      font-size: 28px;
+      text-align: center;
+      letter-spacing: -.4px;
+    }
+    .success p {
+      color: var(--widget-muted);
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .detail {
+      border: 1px solid var(--widget-border);
+      border-radius: 12px;
+      background: var(--widget-surface);
+      padding: 12px;
+    }
+    .detail .row { margin-bottom: 7px; }
+    .detail .row:last-child { margin-bottom: 0; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .overlay { padding: 0; align-items: stretch; }
+      .widget {
+        width: 100%;
+        height: 100dvh;
+        border-radius: 0;
+      }
+      .title { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">Forma<span>Home</span></div>
+      <div class="topbar-meta">Cart: 1 item · Secure checkout</div>
+    </header>
+
+    <div class="layout">
+      <section class="product-panel">
+        <div class="hero">
+          <div class="hero-card">
+            <div class="hero-top">
+              <span class="badge">EDITOR PICK</span>
+              <div class="hero-price">₹74,999 <small>₹89,999</small></div>
+            </div>
+            <div class="sofa">
+              <svg viewBox="0 0 220 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="12" y="66" width="196" height="50" rx="9" fill="#8A775F" opacity="0.5"/>
+                <rect x="24" y="42" width="76" height="56" rx="8" fill="#A28A70" opacity="0.58"/>
+                <rect x="120" y="42" width="76" height="56" rx="8" fill="#A28A70" opacity="0.58"/>
+                <rect x="23" y="35" width="174" height="17" rx="8" fill="#806D57" opacity="0.46"/>
+                <rect x="12" y="98" width="22" height="18" rx="5" fill="#6E5C48" opacity="0.58"/>
+                <rect x="186" y="98" width="22" height="18" rx="5" fill="#6E5C48" opacity="0.58"/>
+                <rect x="12" y="66" width="22" height="52" rx="8" fill="#846F59" opacity="0.55"/>
+                <rect x="186" y="66" width="22" height="52" rx="8" fill="#846F59" opacity="0.55"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="product-body">
+          <div class="kicker">Sofas & Sectionals</div>
+          <h1 class="title">Osaka Sectional Sofa</h1>
+          <div class="sub">Premium Fabric · 5-Seater · 280cm · 4.8 rating (214)</div>
+
+          <div class="benefits">
+            <div class="benefit">Free Delivery</div>
+            <div class="benefit">30-Day Returns</div>
+            <div class="benefit">3-Year Warranty</div>
+          </div>
+
+          <div class="cta">
+            <button class="btn btn-primary">Add to Cart — ₹74,999</button>
+
+            <div class="paypace" onclick="openWidget()">
+              <div class="paypace-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="M12 7v5l3.5 2"></path>
+                </svg>
+              </div>
+              <div>
+                <div class="paypace-title">Pay at Your Pace · EMI from ₹6,249/mo</div>
+                <div class="paypace-sub">Chat setup takes ~30 seconds · no paperwork</div>
+                <div class="mini-badge">Powered by Pine Labs · PCI-DSS secured</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+    <section class="widget">
+      <header class="w-head">
+        <div class="w-avatar">PL</div>
+        <div>
+          <div class="w-name">EMI Advisor</div>
+          <div class="w-status"><span class="dot"></span>Online now · Pine Labs</div>
+        </div>
+        <button class="w-close" onclick="closeWidget()" aria-label="Close widget">✕</button>
+      </header>
+
+      <div class="w-order">
+        <span>Osaka Sectional Sofa · 5-Seater</span>
+        <strong>₹74,999</strong>
+      </div>
+
+      <div class="w-note">
+        I help compare EMI plans only. Card number, CVV, OTP are never collected here.
+      </div>
+
+      <div class="messages" id="messages"></div>
+
+      <div class="input-wrap" id="inputWrap">
+        <div class="input-row">
+          <textarea id="userInput" placeholder="Ask about plans, fees, or safety..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="send" id="sendBtn" onclick="sendMessage()" aria-label="Send">➤</button>
+        </div>
+        <div class="foot">Encrypted flow · Secure checkout hosted by Pine Labs</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const MERCHANT_CONFIG = {
+      name: "FormaHome",
+      category: "furniture",
+      return_policy: "30-day hassle-free returns. EMI cancellation auto-closes remaining instalments.",
+      agent_name: "Priya"
+    };
+
+    const ORDER = {
+      name: "Osaka Sectional Sofa",
+      amount: 74999,
+      currency: "INR"
+    };
+
+    const EMI_PLANS = {
+      HDFC: [
+        { tenure: 3, monthly: 25333, interest_rate: 0, processing_fee: 0, label: "No cost EMI" },
+        { tenure: 6, monthly: 12833, interest_rate: 0, processing_fee: 0, label: "No cost EMI", popular: true, offer: "Zero processing fee · ends Mar 31" },
+        { tenure: 9, monthly: 8611, interest_rate: 0, processing_fee: 0, label: "No cost EMI" },
+        { tenure: 12, monthly: 6594, interest_rate: 12, processing_fee: 499, label: "12% interest p.a." }
+      ],
+      ICICI: [
+        { tenure: 3, monthly: 25333, interest_rate: 0, processing_fee: 0, label: "No cost EMI" },
+        { tenure: 6, monthly: 12833, interest_rate: 0, processing_fee: 0, label: "No cost EMI", popular: true },
+        { tenure: 12, monthly: 6594, interest_rate: 12, processing_fee: 499, label: "12% interest p.a." }
+      ],
+      AXIS: [
+        { tenure: 6, monthly: 12833, interest_rate: 0, processing_fee: 0, label: "No cost EMI", popular: true },
+        { tenure: 9, monthly: 8611, interest_rate: 0, processing_fee: 0, label: "No cost EMI" },
+        { tenure: 12, monthly: 6703, interest_rate: 13, processing_fee: 299, label: "13% interest p.a." }
+      ],
+      SBI: [
+        { tenure: 6, monthly: 13025, interest_rate: 0.5, processing_fee: 200, label: "0.5% p.a." },
+        { tenure: 9, monthly: 8756, interest_rate: 1, processing_fee: 200, label: "1% interest" },
+        { tenure: 12, monthly: 6703, interest_rate: 13, processing_fee: 499, label: "13% p.a." }
+      ],
+      KOTAK: [
+        { tenure: 3, monthly: 25333, interest_rate: 0, processing_fee: 0, label: "No cost EMI" },
+        { tenure: 6, monthly: 12833, interest_rate: 0, processing_fee: 0, label: "No cost EMI", popular: true }
+      ]
+    };
+
+    let conversationHistory = [];
+    let currentBank = null;
+    let comparisonBanks = [];
+    let selectedPlan = null;
+    let isTyping = false;
+
+    function buildSystemPrompt() {
+      const plansText = currentBank && EMI_PLANS[currentBank]
+        ? EMI_PLANS[currentBank].map(p =>
+            `- ${p.tenure}m: Rs.${p.monthly}/month | ${p.label}${p.processing_fee ? ` | Rs.${p.processing_fee} fee` : " | No fee"}`
+          ).join("\n")
+        : "- Ask customer bank first";
+
+      return `You are Priya, EMI advisor.
+Order: ${ORDER.name}, Rs.${ORDER.amount}
+Merchant: ${MERCHANT_CONFIG.name}
+Policy: ${MERCHANT_CONFIG.return_policy}
+Bank: ${currentBank || "unknown"}
+Plans:
+${plansText}
+Rules: keep concise, never ask card details, no invented numbers.`;
+    }
+
+    function openWidget() {
+      document.getElementById("overlay").classList.add("open");
+      if (conversationHistory.length === 0) startConversation();
+    }
+
+    function closeWidget() {
+      document.getElementById("overlay").classList.remove("open");
+    }
+
+    function handleOverlayClick(event) {
+      if (event.target.id === "overlay") closeWidget();
+    }
+
+    function startConversation() {
+      setTimeout(() => {
+        addAgentMessage(
+          "Hi, I am Priya.\nI can help you compare EMI options across two banks, then choose the best plan.\nPick your first bank card."
+        );
+        setTimeout(addBankChips, 250);
+      }, 500);
+    }
+
+    function addBankChips(excludedBanks = [], withContinue = false) {
+      const banks = ["HDFC", "ICICI", "AXIS", "SBI", "KOTAK", "Other bank"];
+      const row = document.createElement("div");
+      row.className = "chips";
+      const chips = banks
+        .filter(bank => !excludedBanks.includes(bank))
+        .map(bank => `<button class="chip" onclick="selectBank('${bank}')">${bank}</button>`);
+      if (withContinue && comparisonBanks.length === 1) {
+        chips.push(`<button class="chip" onclick="continueWithSingleBank()">Continue with ${comparisonBanks[0]}</button>`);
+      }
+      row.innerHTML = chips.join("");
+      document.getElementById("messages").appendChild(row);
+      scrollToBottom();
+    }
+
+    function selectBank(bank) {
+      document.querySelectorAll(".chips").forEach(el => el.remove());
+
+      if (bank === "Other bank") {
+        addUserMessage("I have a different bank");
+        showTyping();
+        setTimeout(() => {
+          hideTyping();
+          addAgentMessage(
+            "No problem. Let us compare from the listed banks first.\nYou can still see exact eligibility for your card on checkout."
+          );
+          setTimeout(() => addBankChips(comparisonBanks, comparisonBanks.length === 1), 220);
+        }, 900);
+        return;
+      }
+
+      if (comparisonBanks.includes(bank)) {
+        addAgentMessage(`${bank} is already selected. Choose another bank to compare.`);
+        setTimeout(() => addBankChips(comparisonBanks, comparisonBanks.length === 1), 200);
+        return;
+      }
+
+      if (comparisonBanks.length >= 2) {
+        addAgentMessage("You can compare up to 2 banks at once. Please select an EMI plan below.");
+        return;
+      }
+
+      comparisonBanks.push(bank);
+      currentBank = bank;
+      addUserMessage(`${bank} card`);
+      showTyping();
+
+      setTimeout(() => {
+        hideTyping();
+        if (!EMI_PLANS[bank]) {
+          addAgentMessage("I do not see plans for that bank right now. You can still verify all options at checkout.");
+          return;
+        }
+        if (comparisonBanks.length === 1) {
+          addAgentMessage(
+            `Great, ${bank} added.\nPick one more bank to compare side-by-side, or continue with ${bank}.`
+          );
+          setTimeout(() => addBankChips(comparisonBanks, true), 200);
+        } else {
+          addAgentMessage(
+            `Perfect. Comparing ${comparisonBanks[0]} and ${comparisonBanks[1]} now.\nReview both options and select your EMI plan.`
+          );
+          setTimeout(() => addComparisonPlans(comparisonBanks), 180);
+        }
+      }, 1100);
+    }
+
+    function continueWithSingleBank() {
+      document.querySelectorAll(".chips").forEach(el => el.remove());
+      if (!comparisonBanks.length) return;
+      addUserMessage(`Continue with ${comparisonBanks[0]}`);
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        addAgentMessage(
+          `Sure. Here are ${comparisonBanks[0]} EMI options.\nYou can still ask me to compare another bank anytime.`
+        );
+        setTimeout(() => addComparisonPlans([comparisonBanks[0]]), 180);
+      }, 700);
+    }
+
+    function addComparisonPlans(banks) {
+      document.querySelectorAll(".compare-wrap, .plans").forEach(el => el.remove());
+      const wrap = document.createElement("div");
+      wrap.className = "compare-wrap";
+
+      const tenures = Array.from(
+        new Set(
+          banks.flatMap(bank => (EMI_PLANS[bank] || []).map(plan => plan.tenure))
+        )
+      ).sort((a, b) => a - b);
+
+      const scroll = document.createElement("div");
+      scroll.className = "compare-scroll";
+
+      const table = document.createElement("table");
+      table.className = "compare-table";
+
+      const thead = document.createElement("thead");
+      const headRow = document.createElement("tr");
+      headRow.innerHTML = `<th class="tenure-head">Tenure</th>${
+        banks.map(bank => `<th>${bank}</th>`).join("")
+      }`;
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+
+      tenures.forEach(tenure => {
+        const row = document.createElement("tr");
+        let rowHtml = `<td class="tenure-cell">${tenure}M</td>`;
+
+        banks.forEach(bank => {
+          const plan = (EMI_PLANS[bank] || []).find(item => item.tenure === tenure);
+          if (!plan) {
+            rowHtml += `
+              <td>
+                <button class="compare-cell-btn na" type="button" aria-disabled="true">
+                  <span class="compare-meta">Not available</span>
+                </button>
+              </td>
+            `;
+            return;
+          }
+
+          rowHtml += `
+            <td>
+              <button class="compare-cell-btn" type="button" onclick="selectPlan(${JSON.stringify(plan).replace(/"/g, "&quot;")}, '${bank}')">
+                <span class="compare-amt">Rs.${plan.monthly.toLocaleString("en-IN")}</span>
+                <span class="compare-meta">${plan.interest_rate === 0 ? "No cost EMI" : plan.label}</span>
+                <span class="compare-meta">${plan.processing_fee === 0 ? "No fee" : `Rs.${plan.processing_fee} fee`}</span>
+                ${plan.popular ? '<span class="compare-pill">Popular</span>' : ""}
+              </button>
+            </td>
+          `;
+        });
+
+        row.innerHTML = rowHtml;
+        tbody.appendChild(row);
+      });
+
+      table.appendChild(tbody);
+      scroll.appendChild(table);
+      wrap.appendChild(scroll);
+
+      const actions = document.createElement("div");
+      actions.className = "compare-actions";
+      actions.innerHTML = `
+        <button class="chip" onclick="chooseDifferentBanks()">Choose different banks</button>
+        <button class="chip" onclick="compareCurrentBanks()">Refresh current comparison</button>
+      `;
+      wrap.appendChild(actions);
+
+      document.getElementById("messages").appendChild(wrap);
+      scrollToBottom();
+    }
+
+    function addPlanCards(plans, bank) {
+      addComparisonPlans([bank]);
+    }
+
+    function selectPlan(plan, bank) {
+      document.querySelectorAll(".compare-wrap, .plans").forEach(el => el.remove());
+      selectedPlan = { ...plan, bank };
+      addUserMessage(`${plan.tenure}-month plan at Rs.${plan.monthly.toLocaleString("en-IN")}/month`);
+      showTyping();
+
+      setTimeout(() => {
+        hideTyping();
+        const totalCost = plan.monthly * plan.tenure;
+        const extra = totalCost - ORDER.amount;
+        const note = plan.interest_rate === 0
+          ? `You pay exactly Rs.${ORDER.amount.toLocaleString("en-IN")} with zero extra cost.`
+          : `Total is Rs.${totalCost.toLocaleString("en-IN")} including Rs.${extra.toLocaleString("en-IN")} interest.`;
+        addAgentMessage(`Great pick.\n${note}\nPlease share your mobile number so I can send your payment link.`);
+        setTimeout(() => addConfirmCard(plan, bank), 220);
+      }, 1000);
+    }
+
+    function addConfirmCard(plan, bank) {
+      const totalPayable = plan.monthly * plan.tenure + (plan.processing_fee || 0);
+      const block = document.createElement("div");
+      block.className = "confirm";
+      block.innerHTML = `
+        <h4>Your EMI Plan</h4>
+        <div class="row"><span>Product</span><span>Osaka Sofa</span></div>
+        <div class="row"><span>Monthly</span><span><strong>Rs.${plan.monthly.toLocaleString("en-IN")}</strong></span></div>
+        <div class="row"><span>Tenure</span><span>${plan.tenure} months</span></div>
+        <div class="row"><span>Bank</span><span>${bank}</span></div>
+        <div class="row"><span>Interest</span><span>${plan.interest_rate === 0 ? "Zero" : plan.interest_rate + "% p.a."}</span></div>
+        ${plan.processing_fee > 0 ? `<div class="row"><span>Processing fee</span><span>Rs.${plan.processing_fee}</span></div>` : ""}
+        <hr class="rule">
+        <div class="row"><span>Total payable</span><span><strong>Rs.${totalPayable.toLocaleString("en-IN")}</strong></span></div>
+        <label class="mobile-label" for="mobileInput">Mobile number for payment link</label>
+        <input class="mobile-input" id="mobileInput" type="tel" inputmode="numeric" maxlength="10" placeholder="Enter 10-digit mobile number">
+        <div class="input-error" id="mobileError"></div>
+        <button class="pay-btn" onclick="sendPaymentLink()">Send Payment Link</button>
+        <button class="change-btn" onclick="checkPlansAgain()">Check plans again</button>
+        <div class="mobile-help">We will send a secure Pine Labs link by SMS. You can complete payment from there.</div>
+      `;
+      document.getElementById("messages").appendChild(block);
+      scrollToBottom();
+    }
+
+    function checkPlansAgain() {
+      document.querySelectorAll(".confirm").forEach(el => el.remove());
+      addUserMessage("Check plans again");
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        addAgentMessage("Sure. Do you want to compare the current banks or choose a different bank set?");
+        setTimeout(() => addRecompareOptions(), 180);
+      }, 700);
+    }
+
+    function addRecompareOptions() {
+      document.querySelectorAll(".chips").forEach(el => el.remove());
+      const row = document.createElement("div");
+      row.className = "chips";
+      row.innerHTML = `
+        <button class="chip" onclick="compareCurrentBanks()">Compare current banks</button>
+        <button class="chip" onclick="chooseDifferentBanks()">Choose different banks</button>
+      `;
+      document.getElementById("messages").appendChild(row);
+      scrollToBottom();
+    }
+
+    function compareCurrentBanks() {
+      document.querySelectorAll(".chips").forEach(el => el.remove());
+      addUserMessage("Compare current banks");
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        const banksToCompare = comparisonBanks.length
+          ? comparisonBanks
+          : (selectedPlan?.bank ? [selectedPlan.bank] : ["HDFC"]);
+        addAgentMessage("Showing your current EMI comparison. Select any plan to continue.");
+        setTimeout(() => addComparisonPlans(banksToCompare), 180);
+      }, 700);
+    }
+
+    function chooseDifferentBanks() {
+      document.querySelectorAll(".chips, .compare-wrap, .plans").forEach(el => el.remove());
+      addUserMessage("Choose different banks");
+      comparisonBanks = [];
+      currentBank = null;
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        addAgentMessage("Great. Let us compare a new set.\nPick your first bank card.");
+        setTimeout(() => addBankChips([], false), 180);
+      }, 700);
+    }
+
+    function sendPaymentLink() {
+      if (!selectedPlan) return;
+      const mobileInput = document.getElementById("mobileInput");
+      const mobileError = document.getElementById("mobileError");
+      const digits = (mobileInput.value || "").replace(/\D/g, "");
+
+      if (digits.length !== 10) {
+        mobileError.textContent = "Please enter a valid 10-digit mobile number.";
+        mobileInput.focus();
+        return;
+      }
+
+      mobileError.textContent = "";
+      document.querySelectorAll(".confirm").forEach(el => el.remove());
+      addUserMessage(`Send payment link to +91 ${digits}`);
+      showTyping();
+
+      setTimeout(() => {
+        hideTyping();
+        addAgentMessage("Done. I have sent a secure payment link to your mobile.");
+        setTimeout(() => showPaymentLinkScreen(digits), 260);
+      }, 850);
+    }
+
+    function showPaymentLinkScreen(mobileDigits) {
+      document.getElementById("inputWrap").classList.add("hidden");
+
+      const messages = document.getElementById("messages");
+      messages.innerHTML = "";
+
+      const nextDebit = new Date();
+      nextDebit.setMonth(nextDebit.getMonth() + 1);
+      nextDebit.setDate(5);
+      const debitText = nextDebit.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+
+      const s = document.createElement("section");
+      s.className = "success";
+      const sentAt = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+      s.innerHTML = `
+        <div class="check">📩<span class="sent-badge">⏱ Sent</span></div>
+        <div class="sent-time">Sent at ${sentAt}</div>
+        <h3>Payment Link Sent</h3>
+        <p>We sent your secure payment link to +91 ${mobileDigits}. Complete payment there to finish checkout.</p>
+        <div class="detail">
+          <div class="row"><span>Order ID</span><span>ORD-29874</span></div>
+          <div class="row"><span>First EMI</span><span>Rs.${selectedPlan.monthly.toLocaleString("en-IN")}</span></div>
+          <div class="row"><span>Link expiry</span><span>${debitText}</span></div>
+          <div class="row"><span>Bank</span><span>${selectedPlan.bank} card</span></div>
+          <div class="row"><span>Tenure</span><span>${selectedPlan.tenure} months</span></div>
+        </div>
+      `;
+      messages.appendChild(s);
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("userInput");
+      const sendBtn = document.getElementById("sendBtn");
+      const text = input.value.trim();
+      if (!text || isTyping) return;
+
+      input.value = "";
+      input.style.height = "auto";
+      addUserMessage(text);
+      conversationHistory.push({ role: "user", content: text });
+      showTyping();
+      sendBtn.disabled = true;
+
+      try {
+        const lower = text.toLowerCase();
+        const bankHit = Object.keys(EMI_PLANS).find(b => lower.includes(b.toLowerCase()));
+
+        await new Promise(resolve => setTimeout(resolve, 700));
+        hideTyping();
+
+        if (!currentBank && bankHit) {
+          addAgentMessage(`I can compare ${bankHit} with one more bank. Select banks from the chips and I will show both options together.`);
+          conversationHistory.push({ role: "assistant", content: "Bank recognized" });
+        } else if (lower.includes("safe") || lower.includes("secure")) {
+          addAgentMessage("Yes. Card details are entered only on Pine Labs secure checkout, never inside this chat.");
+        } else if (lower.includes("return")) {
+          addAgentMessage(`Return policy: ${MERCHANT_CONFIG.return_policy}`);
+        } else if (lower.includes("compare")) {
+          if (comparisonBanks.length === 0) {
+            addAgentMessage("Sure, pick your first bank and then one more bank. I will show both side-by-side.");
+            setTimeout(() => addBankChips([], false), 220);
+          } else if (comparisonBanks.length === 1) {
+            addAgentMessage(`Great, ${comparisonBanks[0]} is selected. Choose one more bank to compare.`);
+            setTimeout(() => addBankChips(comparisonBanks, true), 220);
+          } else {
+            addAgentMessage(`You are comparing ${comparisonBanks[0]} and ${comparisonBanks[1]}. Pick any EMI plan to continue.`);
+            setTimeout(() => addComparisonPlans(comparisonBanks), 220);
+          }
+        } else if (lower.includes("best") || lower.includes("recommend")) {
+          if (comparisonBanks.length) {
+            const recommendBank = comparisonBanks[0];
+            const p = EMI_PLANS[recommendBank].find(plan => plan.popular) || EMI_PLANS[recommendBank][0];
+            addAgentMessage(`Among selected banks, ${recommendBank} ${p.tenure}-month at Rs.${p.monthly.toLocaleString("en-IN")}/month is a common choice.`);
+          } else {
+            addAgentMessage("Tell me one or two banks and I will recommend the best EMI plan.");
+          }
+        } else {
+          addAgentMessage("I can help with EMI comparison, charges, safety, and return policy. Share one or two banks to compare.");
+        }
+      } catch (error) {
+        hideTyping();
+        addAgentMessage("Connection issue right now. You can still proceed at checkout to view EMI options.");
+      }
+
+      sendBtn.disabled = false;
+      input.focus();
+    }
+
+    function addAgentMessage(text) {
+      const el = document.createElement("div");
+      el.className = "m agent";
+      el.innerHTML = `
+        <div class="bubble">${escapeHtml(text).replace(/\n/g, "<br>")}</div>
+        <div class="time">${getTime()}</div>
+      `;
+      document.getElementById("messages").appendChild(el);
+      scrollToBottom();
+      conversationHistory.push({ role: "assistant", content: text });
+    }
+
+    function addUserMessage(text) {
+      const el = document.createElement("div");
+      el.className = "m user";
+      el.innerHTML = `
+        <div class="bubble">${escapeHtml(text)}</div>
+        <div class="time">${getTime()}</div>
+      `;
+      document.getElementById("messages").appendChild(el);
+      scrollToBottom();
+    }
+
+    function showTyping() {
+      isTyping = true;
+      const t = document.createElement("div");
+      t.id = "typing";
+      t.className = "typing";
+      t.innerHTML = "<span></span><span></span><span></span>";
+      document.getElementById("messages").appendChild(t);
+      scrollToBottom();
+    }
+
+    function hideTyping() {
+      isTyping = false;
+      const t = document.getElementById("typing");
+      if (t) t.remove();
+    }
+
+    function autoResize(el) {
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 96) + "px";
+    }
+
+    function handleKey(event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function scrollToBottom(force = false) {
+      const wrap = document.getElementById("messages");
+      const distanceFromBottom = wrap.scrollHeight - (wrap.scrollTop + wrap.clientHeight);
+      const isNearBottom = distanceFromBottom < 120;
+      if (!force && !isNearBottom) return;
+      setTimeout(() => { wrap.scrollTop = wrap.scrollHeight; }, 40);
+    }
+
+    function getTime() {
+      return new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    window.__prototype_debug = { buildSystemPrompt };
+  </script>
+</body>
+</html>
