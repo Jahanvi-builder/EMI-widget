@@ -806,6 +806,91 @@
     .change-btn:active {
       transform: translateY(1px);
     }
+    .flow-card {
+      border: 1px solid #bfd8cc;
+      border-radius: 14px;
+      padding: 14px;
+      background: linear-gradient(180deg, #f6fbf8, #eef8f3);
+      width: 100%;
+      animation: slideIn .25s ease;
+    }
+    .flow-title {
+      color: #3f6657;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .flow-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .flow-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .flow-option {
+      width: 100%;
+      text-align: left;
+      border: 1px solid #b8d4c6;
+      border-radius: 10px;
+      background: #fff;
+      color: var(--widget-text);
+      padding: 9px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .flow-option.active {
+      border-color: #72b497;
+      background: #ebf7f1;
+    }
+    .flow-option .subtxt {
+      display: block;
+      color: var(--widget-muted);
+      margin-top: 3px;
+      font-size: 11px;
+    }
+    .mode-cta-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .mode-cta {
+      width: 100%;
+      border: 1px solid #9ec8b7;
+      border-radius: 10px;
+      padding: 10px 8px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: "Manrope", sans-serif;
+      cursor: pointer;
+      transition: all .2s;
+      background: #ffffff;
+      color: #285745;
+    }
+    .mode-cta:hover {
+      background: #eaf6f0;
+      border-color: #88bca7;
+    }
+    .mode-cta.primary {
+      background: linear-gradient(90deg, #50cfca, #34c6aa);
+      border-color: transparent;
+      color: #072431;
+    }
+    .mode-cta.primary:hover {
+      filter: brightness(0.97);
+    }
+    @media (max-width: 420px) {
+      .mode-cta-row {
+        grid-template-columns: 1fr;
+      }
+    }
 
     .input-wrap {
       border-top: 1px solid var(--widget-border);
@@ -1100,11 +1185,45 @@
       ]
     };
 
+    const MOCK_USER_PROFILES = {
+      "9876543210": {
+        otp: "123456",
+        cards: [
+          { id: "card_hdfc_1", brand: "Visa", last4: "4242", bank: "HDFC", isDefault: true },
+          { id: "card_axis_1", brand: "Mastercard", last4: "7612", bank: "AXIS", isDefault: false }
+        ],
+        addresses: [
+          { id: "addr_home", label: "Home", line: "Bandra West, Mumbai 400050", isDefault: true },
+          { id: "addr_work", label: "Work", line: "Andheri East, Mumbai 400069", isDefault: false }
+        ]
+      },
+      "9123456789": {
+        otp: "654321",
+        cards: [
+          { id: "card_icici_1", brand: "RuPay", last4: "9901", bank: "ICICI", isDefault: true }
+        ],
+        addresses: [
+          { id: "addr_primary", label: "Primary", line: "HSR Layout, Bengaluru 560102", isDefault: true }
+        ]
+      }
+    };
+
     let conversationHistory = [];
     let currentBank = null;
     let comparisonBanks = [];
     let selectedPlan = null;
     let isTyping = false;
+    let paymentStage = "init";
+    let paymentSession = {
+      verifiedMobile: null,
+      otpVerified: false,
+      otpSent: false,
+      savedCards: [],
+      savedAddresses: [],
+      selectedCardId: null,
+      selectedAddressId: null,
+      paymentMode: null
+    };
 
     function buildSystemPrompt() {
       const plansText = currentBank && EMI_PLANS[currentBank]
@@ -1309,6 +1428,8 @@ Rules: keep concise, never ask card details, no invented numbers.`;
     function selectPlan(plan, bank) {
       document.querySelectorAll(".compare-wrap, .plans").forEach(el => el.remove());
       selectedPlan = { ...plan, bank };
+      clearVerificationState();
+      paymentStage = "plan_selected";
       addUserMessage(`${plan.tenure}-month plan at Rs.${plan.monthly.toLocaleString("en-IN")}/month`);
       showTyping();
 
@@ -1319,15 +1440,49 @@ Rules: keep concise, never ask card details, no invented numbers.`;
         const note = plan.interest_rate === 0
           ? `You pay exactly Rs.${ORDER.amount.toLocaleString("en-IN")} with zero extra cost.`
           : `Total is Rs.${totalCost.toLocaleString("en-IN")} including Rs.${extra.toLocaleString("en-IN")} interest.`;
-        addAgentMessage(`Great pick.\n${note}\nPlease share your mobile number so I can send your payment link.`);
-        setTimeout(() => addConfirmCard(plan, bank), 220);
+        addAgentMessage(`Great pick.\n${note}\nEnter your mobile number to verify and fetch saved cards + addresses.`);
+        setTimeout(() => addPlanAndMobileCard(plan, bank), 220);
       }, 1000);
     }
 
-    function addConfirmCard(plan, bank) {
+    function clearVerificationState() {
+      paymentSession = {
+        verifiedMobile: null,
+        otpVerified: false,
+        otpSent: false,
+        savedCards: [],
+        savedAddresses: [],
+        selectedCardId: null,
+        selectedAddressId: null,
+        paymentMode: null
+      };
+      paymentStage = "mobile_entry";
+    }
+
+    function clearPaymentFlowCards() {
+      document.querySelectorAll(".confirm, .flow-card, .otp-card, .profile-card, .mode-card, .paynow-card").forEach(el => el.remove());
+    }
+
+    function getProfileByMobile(mobile) {
+      if (MOCK_USER_PROFILES[mobile]) return MOCK_USER_PROFILES[mobile];
+      const last4 = mobile.slice(-4);
+      return {
+        otp: "111111",
+        cards: [
+          { id: `card_demo_${last4}`, brand: "Visa", last4, bank: "Demo Bank", isDefault: true }
+        ],
+        addresses: [
+          { id: `addr_home_${last4}`, label: "Home", line: "Koramangala, Bengaluru 560095", isDefault: true },
+          { id: `addr_work_${last4}`, label: "Work", line: "BKC, Mumbai 400051", isDefault: false }
+        ]
+      };
+    }
+
+    function addPlanAndMobileCard(plan, bank) {
+      paymentStage = "mobile_entry";
       const totalPayable = plan.monthly * plan.tenure + (plan.processing_fee || 0);
       const block = document.createElement("div");
-      block.className = "confirm";
+      block.className = "flow-card confirm";
       block.innerHTML = `
         <h4>Your EMI Plan</h4>
         <div class="row"><span>Product</span><span>Osaka Sofa</span></div>
@@ -1338,18 +1493,342 @@ Rules: keep concise, never ask card details, no invented numbers.`;
         ${plan.processing_fee > 0 ? `<div class="row"><span>Processing fee</span><span>Rs.${plan.processing_fee}</span></div>` : ""}
         <hr class="rule">
         <div class="row"><span>Total payable</span><span><strong>Rs.${totalPayable.toLocaleString("en-IN")}</strong></span></div>
-        <label class="mobile-label" for="mobileInput">Mobile number for payment link</label>
-        <input class="mobile-input" id="mobileInput" type="tel" inputmode="numeric" maxlength="10" placeholder="Enter 10-digit mobile number">
+        <label class="mobile-label" for="mobileInput">Mobile number for saved cards</label>
+        <input class="mobile-input" id="mobileInput" type="tel" inputmode="numeric" maxlength="10" placeholder="Enter 10-digit mobile number" value="${paymentSession.verifiedMobile || ""}">
         <div class="input-error" id="mobileError"></div>
-        <button class="pay-btn" onclick="sendPaymentLink()">Send Payment Link</button>
+        <button class="pay-btn" onclick="sendOtpToMobile()">Send OTP</button>
         <button class="change-btn" onclick="checkPlansAgain()">Check plans again</button>
-        <div class="mobile-help">We will send a secure Pine Labs link by SMS. You can complete payment from there.</div>
+        <div class="mobile-help">We use this number to verify and fetch saved cards and addresses.</div>
       `;
       document.getElementById("messages").appendChild(block);
       scrollToBottom();
     }
 
+    function sendOtpToMobile() {
+      const mobileInput = document.getElementById("mobileInput");
+      const mobileError = document.getElementById("mobileError");
+      const digits = (mobileInput.value || "").replace(/\D/g, "");
+      if (!/^[6-9]\d{9}$/.test(digits)) {
+        mobileError.textContent = "Please enter a valid 10-digit Indian mobile number.";
+        mobileInput.focus();
+        return;
+      }
+      mobileError.textContent = "";
+      paymentSession.verifiedMobile = digits;
+      paymentSession.otpSent = true;
+      paymentSession.otpVerified = false;
+      paymentStage = "otp_sent";
+
+      addUserMessage(`Send OTP to +91 ${digits}`);
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        addAgentMessage(`OTP sent to +91 ${digits}. Please enter the 6-digit OTP to continue.`);
+        addOtpCard();
+      }, 700);
+    }
+
+    function addOtpCard() {
+      clearPaymentFlowCards();
+      const otp = document.createElement("div");
+      otp.className = "flow-card otp-card";
+      otp.innerHTML = `
+        <div class="flow-title">Verify Mobile</div>
+        <label class="mobile-label" for="otpInput">Enter OTP sent to +91 ${paymentSession.verifiedMobile}</label>
+        <input class="mobile-input" id="otpInput" type="tel" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit OTP">
+        <div class="input-error" id="otpError"></div>
+        <button class="pay-btn" onclick="verifyOtpAndFetchProfile()">Verify OTP</button>
+        <div class="flow-actions">
+          <button class="chip" onclick="resendOtp()">Resend OTP</button>
+          <button class="chip" onclick="editMobile()">Edit mobile number</button>
+          <button class="chip" onclick="checkPlansAgain()">Back to comparison</button>
+        </div>
+      `;
+      document.getElementById("messages").appendChild(otp);
+      scrollToBottom();
+    }
+
+    function resendOtp() {
+      addUserMessage("Resend OTP");
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        addAgentMessage(`New OTP sent to +91 ${paymentSession.verifiedMobile}.`);
+        addOtpCard();
+      }, 650);
+    }
+
+    function editMobile() {
+      addUserMessage("Edit mobile number");
+      clearVerificationState();
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        addAgentMessage("Sure. Enter the updated mobile number and send OTP again.");
+        addPlanAndMobileCard(selectedPlan, selectedPlan.bank);
+      }, 650);
+    }
+
+    function verifyOtpAndFetchProfile() {
+      const otpInput = document.getElementById("otpInput");
+      const otpError = document.getElementById("otpError");
+      const value = (otpInput.value || "").replace(/\D/g, "");
+      const profile = getProfileByMobile(paymentSession.verifiedMobile);
+      if (!/^\d{6}$/.test(value)) {
+        otpError.textContent = "Please enter a valid 6-digit OTP.";
+        otpInput.focus();
+        return;
+      }
+      if (!profile) {
+        otpError.textContent = "Profile not found for this mobile number.";
+        return;
+      }
+      otpError.textContent = "";
+      paymentSession.otpVerified = true;
+      paymentSession.savedCards = profile.cards || [];
+      paymentSession.savedAddresses = profile.addresses || [];
+      paymentSession.selectedCardId = paymentSession.savedCards.find(c => c.isDefault)?.id || paymentSession.savedCards[0]?.id || null;
+      paymentSession.selectedAddressId = paymentSession.savedAddresses.find(a => a.isDefault)?.id || paymentSession.savedAddresses[0]?.id || null;
+      paymentStage = "profile_loaded";
+
+      addUserMessage("OTP verified");
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        addAgentMessage("Verified successfully. I fetched your saved cards and addresses.");
+        addSavedProfileCard();
+      }, 700);
+    }
+
+    function addSavedProfileCard() {
+      clearPaymentFlowCards();
+      const cardsHtml = paymentSession.savedCards.length
+        ? paymentSession.savedCards.map(card => `
+          <button class="flow-option ${paymentSession.selectedCardId === card.id ? "active" : ""}" onclick="selectSavedCard('${card.id}')">
+            ${card.brand} •••• ${card.last4} (${card.bank}) ${card.isDefault ? "• Default" : ""}
+            <span class="subtxt">Token: ${card.id}</span>
+          </button>
+        `).join("")
+        : `<div class="flow-option na">No saved cards found for this mobile.</div>`;
+      const addressHtml = paymentSession.savedAddresses.length
+        ? paymentSession.savedAddresses.map(addr => `
+          <button class="flow-option ${paymentSession.selectedAddressId === addr.id ? "active" : ""}" onclick="selectAddress('${addr.id}')">
+            ${addr.label} ${addr.isDefault ? "• Default" : ""}
+            <span class="subtxt">${addr.line}</span>
+          </button>
+        `).join("")
+        : `<div class="flow-option na">No saved addresses found for this mobile.</div>`;
+
+      const block = document.createElement("div");
+      block.className = "flow-card profile-card";
+      block.innerHTML = `
+        <div class="flow-title">Saved Profile</div>
+        <div class="mobile-help">Verified mobile: +91 ${paymentSession.verifiedMobile}</div>
+        <div class="flow-list">${cardsHtml}</div>
+        <div class="flow-list" style="margin-top:12px">${addressHtml}</div>
+        <div class="input-error" id="profileError"></div>
+        <div class="mode-cta-row">
+          <button class="mode-cta primary" onclick="choosePaymentMode('pay_now', true)">Pay now</button>
+          <button class="mode-cta" onclick="choosePaymentMode('payment_link', true)">Pay with payment link</button>
+        </div>
+        <div class="flow-actions">
+          <button class="chip" onclick="editMobile()">Edit mobile number</button>
+          <button class="chip" onclick="checkPlansAgain()">Check plans again</button>
+          <button class="chip" onclick="chooseDifferentBanks()">Choose different banks</button>
+        </div>
+      `;
+      document.getElementById("messages").appendChild(block);
+      scrollToBottom();
+    }
+
+    function selectSavedCard(cardId) {
+      paymentSession.selectedCardId = cardId;
+      addSavedProfileCard();
+    }
+
+    function selectAddress(addressId) {
+      paymentSession.selectedAddressId = addressId;
+      addSavedProfileCard();
+    }
+
+    function proceedToPaymentModes() {
+      const profileError = document.getElementById("profileError");
+      if (!paymentSession.selectedCardId || !paymentSession.selectedAddressId) {
+        profileError.textContent = "Please select a saved card and an address to continue.";
+        return;
+      }
+      addUserMessage("Continue to payment options");
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        addAgentMessage("Choose how you want to complete this payment.");
+        addPaymentModeCard();
+      }, 650);
+    }
+
+    function addPaymentModeCard() {
+      clearPaymentFlowCards();
+      paymentStage = "payment_mode_selected";
+      const block = document.createElement("div");
+      block.className = "flow-card mode-card";
+      block.innerHTML = `
+        <div class="flow-title">Payment Mode</div>
+        <div class="flow-list">
+          <button class="flow-option" onclick="choosePaymentMode('pay_now')">Pay now with saved card
+            <span class="subtxt">Enter CVV + expiry and complete payment inline.</span>
+          </button>
+          <button class="flow-option" onclick="choosePaymentMode('payment_link')">Pay with payment link
+            <span class="subtxt">Send secure link to +91 ${paymentSession.verifiedMobile}</span>
+          </button>
+        </div>
+        <div class="flow-actions">
+          <button class="chip" onclick="addSavedProfileCard()">Change card</button>
+          <button class="chip" onclick="addSavedProfileCard()">Change address</button>
+          <button class="chip" onclick="editMobile()">Edit mobile number</button>
+          <button class="chip" onclick="checkPlansAgain()">Back to comparison</button>
+        </div>
+      `;
+      document.getElementById("messages").appendChild(block);
+      scrollToBottom();
+    }
+
+    function choosePaymentMode(mode, fromProfile = false) {
+      if (fromProfile) {
+        const profileError = document.getElementById("profileError");
+        if (!paymentSession.selectedCardId || !paymentSession.selectedAddressId) {
+          if (profileError) profileError.textContent = "Please select a saved card and an address first.";
+          return;
+        }
+      }
+      paymentSession.paymentMode = mode;
+      if (mode === "pay_now") {
+        addUserMessage("Pay now");
+        showTyping();
+        setTimeout(() => {
+          hideTyping();
+          addAgentMessage("Enter CVV and card expiry to confirm payment.");
+          addPayNowCard();
+        }, 550);
+      } else {
+        addUserMessage("Pay with payment link");
+        sendPaymentLinkFromVerified(true);
+      }
+    }
+
+    function addPayNowCard() {
+      clearPaymentFlowCards();
+      const card = paymentSession.savedCards.find(c => c.id === paymentSession.selectedCardId);
+      const addr = paymentSession.savedAddresses.find(a => a.id === paymentSession.selectedAddressId);
+      const block = document.createElement("div");
+      block.className = "flow-card paynow-card";
+      block.innerHTML = `
+        <div class="flow-title">Pay Now</div>
+        <div class="mobile-help">Card: ${card?.brand || "Card"} •••• ${card?.last4 || "----"} (${card?.bank || ""})</div>
+        <div class="mobile-help">Address: ${addr?.label || ""} - ${addr?.line || ""}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+          <div>
+            <label class="mobile-label" for="cvvInput">CVV</label>
+            <input class="mobile-input" id="cvvInput" type="password" inputmode="numeric" maxlength="4" placeholder="3/4 digits">
+          </div>
+          <div>
+            <label class="mobile-label" for="expiryInput">Expiry (MM/YY)</label>
+            <input class="mobile-input" id="expiryInput" type="text" inputmode="numeric" maxlength="5" placeholder="MM/YY">
+          </div>
+        </div>
+        <div class="input-error" id="payNowError"></div>
+        <button class="pay-btn" onclick="submitPayNow()">Confirm Payment</button>
+        <div class="flow-actions">
+          <button class="chip" onclick="addPaymentModeCard()">Switch payment mode</button>
+          <button class="chip" onclick="addSavedProfileCard()">Change card</button>
+          <button class="chip" onclick="addSavedProfileCard()">Change address</button>
+        </div>
+      `;
+      document.getElementById("messages").appendChild(block);
+      scrollToBottom();
+    }
+
+    function submitPayNow() {
+      const cvv = (document.getElementById("cvvInput").value || "").trim();
+      const expiry = (document.getElementById("expiryInput").value || "").trim();
+      const err = document.getElementById("payNowError");
+      const selectedCard = paymentSession.savedCards.find(c => c.id === paymentSession.selectedCardId);
+      const expectedCvvLength = selectedCard?.brand === "AMEX" ? 4 : 3;
+      if (!new RegExp(`^\\d{${expectedCvvLength}}$`).test(cvv)) {
+        err.textContent = `Please enter a valid ${expectedCvvLength}-digit CVV.`;
+        return;
+      }
+      if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
+        err.textContent = "Please enter a valid expiry in MM/YY.";
+        return;
+      }
+      const [mm, yy] = expiry.split("/");
+      const now = new Date();
+      const thisYear = now.getFullYear() % 100;
+      const thisMonth = now.getMonth() + 1;
+      const expMonth = Number(mm);
+      const expYear = Number(yy);
+      if (expYear < thisYear || (expYear === thisYear && expMonth < thisMonth)) {
+        err.textContent = "Card expiry is in the past. Please check and try again.";
+        return;
+      }
+      err.textContent = "";
+      addUserMessage("Confirm payment");
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        showPayNowSuccess();
+      }, 800);
+    }
+
+    function showPayNowSuccess() {
+      document.getElementById("inputWrap").classList.add("hidden");
+      const messages = document.getElementById("messages");
+      messages.innerHTML = "";
+      const nextDebit = new Date();
+      nextDebit.setMonth(nextDebit.getMonth() + 1);
+      nextDebit.setDate(5);
+      const debitText = nextDebit.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+      const s = document.createElement("section");
+      s.className = "success";
+      s.innerHTML = `
+        <div class="check">✅<span class="sent-badge">Paid</span></div>
+        <h3>Payment Successful</h3>
+        <p>Your payment is complete using the saved card.</p>
+        <div class="detail">
+          <div class="row"><span>Order ID</span><span>ORD-29874</span></div>
+          <div class="row"><span>First EMI</span><span>Rs.${selectedPlan.monthly.toLocaleString("en-IN")}</span></div>
+          <div class="row"><span>Next debit</span><span>${debitText}</span></div>
+          <div class="row"><span>Bank</span><span>${selectedPlan.bank} card</span></div>
+          <div class="row"><span>Tenure</span><span>${selectedPlan.tenure} months</span></div>
+        </div>
+      `;
+      messages.appendChild(s);
+    }
+
+    function sendPaymentLinkFromVerified(skipUserMessage = false) {
+      if (!paymentSession.verifiedMobile || !paymentSession.otpVerified) {
+        addAgentMessage("Please verify your mobile first.");
+        addPlanAndMobileCard(selectedPlan, selectedPlan.bank);
+        return;
+      }
+      if (!paymentSession.selectedAddressId || !paymentSession.selectedCardId) {
+        addAgentMessage("Please select card and address before sending the payment link.");
+        addSavedProfileCard();
+        return;
+      }
+      if (!skipUserMessage) {
+        addUserMessage(`Send payment link to +91 ${paymentSession.verifiedMobile}`);
+      }
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        addAgentMessage("Done. I have sent a secure payment link to your mobile.");
+        setTimeout(() => showPaymentLinkScreen(paymentSession.verifiedMobile), 260);
+      }, 850);
+    }
+
     function checkPlansAgain() {
+      clearPaymentFlowCards();
       document.querySelectorAll(".confirm").forEach(el => el.remove());
       addUserMessage("Check plans again");
       showTyping();
@@ -1373,6 +1852,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
     }
 
     function compareCurrentBanks() {
+      clearPaymentFlowCards();
       document.querySelectorAll(".chips").forEach(el => el.remove());
       addUserMessage("Compare current banks");
       showTyping();
@@ -1387,6 +1867,8 @@ Rules: keep concise, never ask card details, no invented numbers.`;
     }
 
     function chooseDifferentBanks() {
+      clearVerificationState();
+      clearPaymentFlowCards();
       document.querySelectorAll(".chips, .compare-wrap, .plans").forEach(el => el.remove());
       addUserMessage("Choose different banks");
       comparisonBanks = [];
@@ -1397,30 +1879,6 @@ Rules: keep concise, never ask card details, no invented numbers.`;
         addAgentMessage("Great. Let us compare a new set.\nPick your first bank card.");
         setTimeout(() => addBankChips([], false), 180);
       }, 700);
-    }
-
-    function sendPaymentLink() {
-      if (!selectedPlan) return;
-      const mobileInput = document.getElementById("mobileInput");
-      const mobileError = document.getElementById("mobileError");
-      const digits = (mobileInput.value || "").replace(/\D/g, "");
-
-      if (digits.length !== 10) {
-        mobileError.textContent = "Please enter a valid 10-digit mobile number.";
-        mobileInput.focus();
-        return;
-      }
-
-      mobileError.textContent = "";
-      document.querySelectorAll(".confirm").forEach(el => el.remove());
-      addUserMessage(`Send payment link to +91 ${digits}`);
-      showTyping();
-
-      setTimeout(() => {
-        hideTyping();
-        addAgentMessage("Done. I have sent a secure payment link to your mobile.");
-        setTimeout(() => showPaymentLinkScreen(digits), 260);
-      }, 850);
     }
 
     function showPaymentLinkScreen(mobileDigits) {
@@ -1584,6 +2042,32 @@ Rules: keep concise, never ask card details, no invented numbers.`;
     }
 
     window.__prototype_debug = { buildSystemPrompt };
+  </script>
+
+  <script type="module">
+    // Agentation overlay mount (dev-only visual annotation toolbar).
+    // Requires agentation-mcp server running on http://localhost:4747
+    try {
+      const [{ default: React }, { createRoot }, { Agentation }] = await Promise.all([
+        import("https://esm.sh/react@18.3.1"),
+        import("https://esm.sh/react-dom@18.3.1/client"),
+        import("https://esm.sh/agentation@3.0.2"),
+      ]);
+
+      const host = document.createElement("div");
+      host.id = "agentation-root";
+      document.body.appendChild(host);
+
+      const root = createRoot(host);
+      root.render(
+        React.createElement(Agentation, {
+          endpoint: "http://localhost:4747",
+          copyToClipboard: true,
+        }),
+      );
+    } catch (err) {
+      console.warn("Agentation overlay failed to load:", err);
+    }
   </script>
 </body>
 </html>
