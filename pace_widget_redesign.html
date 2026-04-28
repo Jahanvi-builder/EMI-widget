@@ -1214,6 +1214,7 @@
     let selectedPlan = null;
     let isTyping = false;
     let paymentStage = "init";
+    let composerMode = "normal_chat";
     let paymentSession = {
       verifiedMobile: null,
       otpVerified: false,
@@ -1223,6 +1224,13 @@
       selectedCardId: null,
       selectedAddressId: null,
       paymentMode: null
+    };
+
+    const COMPOSER_CONFIG = {
+      normal_chat: { placeholder: "Ask about plans, fees, or safety...", button: "➤", maxLength: 240, inputMode: "text" },
+      capture_mobile: { placeholder: "Enter 10-digit mobile number", button: "OTP", maxLength: 10, inputMode: "numeric" },
+      capture_otp: { placeholder: "Enter 6-digit OTP", button: "OK", maxLength: 6, inputMode: "numeric" },
+      capture_cvv: { placeholder: "Enter CVV", button: "Pay", maxLength: 4, inputMode: "numeric" }
     };
 
     function buildSystemPrompt() {
@@ -1244,6 +1252,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
 
     function openWidget() {
       document.getElementById("overlay").classList.add("open");
+      setComposerMode("normal_chat");
       if (conversationHistory.length === 0) startConversation();
     }
 
@@ -1459,6 +1468,33 @@ Rules: keep concise, never ask card details, no invented numbers.`;
       paymentStage = "mobile_entry";
     }
 
+    function setComposerMode(mode) {
+      composerMode = mode;
+      const input = document.getElementById("userInput");
+      const sendBtn = document.getElementById("sendBtn");
+      const cfg = COMPOSER_CONFIG[mode] || COMPOSER_CONFIG.normal_chat;
+      input.placeholder = cfg.placeholder;
+      input.maxLength = cfg.maxLength;
+      input.inputMode = cfg.inputMode;
+      sendBtn.textContent = cfg.button;
+      input.value = "";
+      input.style.height = "auto";
+      input.focus();
+    }
+
+    function getComposerDigits() {
+      return (document.getElementById("userInput").value || "").replace(/\D/g, "");
+    }
+
+    function setStepError(message) {
+      const activeError = document.querySelector(".flow-card .input-error");
+      if (activeError) {
+        activeError.textContent = message;
+      } else if (message) {
+        addAgentMessage(message);
+      }
+    }
+
     function clearPaymentFlowCards() {
       document.querySelectorAll(".confirm, .flow-card, .otp-card, .profile-card, .mode-card, .paynow-card").forEach(el => el.remove());
     }
@@ -1480,6 +1516,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
 
     function addPlanAndMobileCard(plan, bank) {
       paymentStage = "mobile_entry";
+      setComposerMode("capture_mobile");
       const totalPayable = plan.monthly * plan.tenure + (plan.processing_fee || 0);
       const block = document.createElement("div");
       block.className = "flow-card confirm";
@@ -1493,10 +1530,8 @@ Rules: keep concise, never ask card details, no invented numbers.`;
         ${plan.processing_fee > 0 ? `<div class="row"><span>Processing fee</span><span>Rs.${plan.processing_fee}</span></div>` : ""}
         <hr class="rule">
         <div class="row"><span>Total payable</span><span><strong>Rs.${totalPayable.toLocaleString("en-IN")}</strong></span></div>
-        <label class="mobile-label" for="mobileInput">Mobile number for saved cards</label>
-        <input class="mobile-input" id="mobileInput" type="tel" inputmode="numeric" maxlength="10" placeholder="Enter 10-digit mobile number" value="${paymentSession.verifiedMobile || ""}">
+        <label class="mobile-label">Share your mobile number in the chat box below to fetch saved cards.</label>
         <div class="input-error" id="mobileError"></div>
-        <button class="pay-btn" onclick="sendOtpToMobile()">Send OTP</button>
         <button class="change-btn" onclick="checkPlansAgain()">Check plans again</button>
         <div class="mobile-help">We use this number to verify and fetch saved cards and addresses.</div>
       `;
@@ -1504,20 +1539,17 @@ Rules: keep concise, never ask card details, no invented numbers.`;
       scrollToBottom();
     }
 
-    function sendOtpToMobile() {
-      const mobileInput = document.getElementById("mobileInput");
-      const mobileError = document.getElementById("mobileError");
-      const digits = (mobileInput.value || "").replace(/\D/g, "");
+    function sendOtpToMobile(digits) {
       if (!/^[6-9]\d{9}$/.test(digits)) {
-        mobileError.textContent = "Please enter a valid 10-digit Indian mobile number.";
-        mobileInput.focus();
+        setStepError("Please enter a valid 10-digit Indian mobile number.");
         return;
       }
-      mobileError.textContent = "";
+      setStepError("");
       paymentSession.verifiedMobile = digits;
       paymentSession.otpSent = true;
       paymentSession.otpVerified = false;
       paymentStage = "otp_sent";
+      setComposerMode("capture_otp");
 
       addUserMessage(`Send OTP to +91 ${digits}`);
       showTyping();
@@ -1530,14 +1562,13 @@ Rules: keep concise, never ask card details, no invented numbers.`;
 
     function addOtpCard() {
       clearPaymentFlowCards();
+      setComposerMode("capture_otp");
       const otp = document.createElement("div");
       otp.className = "flow-card otp-card";
       otp.innerHTML = `
         <div class="flow-title">Verify Mobile</div>
-        <label class="mobile-label" for="otpInput">Enter OTP sent to +91 ${paymentSession.verifiedMobile}</label>
-        <input class="mobile-input" id="otpInput" type="tel" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit OTP">
+        <label class="mobile-label">Enter OTP sent to +91 ${paymentSession.verifiedMobile} in the chat box below.</label>
         <div class="input-error" id="otpError"></div>
-        <button class="pay-btn" onclick="verifyOtpAndFetchProfile()">Verify OTP</button>
         <div class="flow-actions">
           <button class="chip" onclick="resendOtp()">Resend OTP</button>
           <button class="chip" onclick="editMobile()">Edit mobile number</button>
@@ -1569,27 +1600,24 @@ Rules: keep concise, never ask card details, no invented numbers.`;
       }, 650);
     }
 
-    function verifyOtpAndFetchProfile() {
-      const otpInput = document.getElementById("otpInput");
-      const otpError = document.getElementById("otpError");
-      const value = (otpInput.value || "").replace(/\D/g, "");
+    function verifyOtpAndFetchProfile(value) {
       const profile = getProfileByMobile(paymentSession.verifiedMobile);
       if (!/^\d{6}$/.test(value)) {
-        otpError.textContent = "Please enter a valid 6-digit OTP.";
-        otpInput.focus();
+        setStepError("Please enter a valid 6-digit OTP.");
         return;
       }
       if (!profile) {
-        otpError.textContent = "Profile not found for this mobile number.";
+        setStepError("Profile not found for this mobile number.");
         return;
       }
-      otpError.textContent = "";
+      setStepError("");
       paymentSession.otpVerified = true;
       paymentSession.savedCards = profile.cards || [];
       paymentSession.savedAddresses = profile.addresses || [];
       paymentSession.selectedCardId = paymentSession.savedCards.find(c => c.isDefault)?.id || paymentSession.savedCards[0]?.id || null;
       paymentSession.selectedAddressId = paymentSession.savedAddresses.find(a => a.isDefault)?.id || paymentSession.savedAddresses[0]?.id || null;
       paymentStage = "profile_loaded";
+      setComposerMode("normal_chat");
 
       addUserMessage("OTP verified");
       showTyping();
@@ -1675,7 +1703,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
         <div class="flow-title">Payment Mode</div>
         <div class="flow-list">
           <button class="flow-option" onclick="choosePaymentMode('pay_now')">Pay now with saved card
-            <span class="subtxt">Enter CVV + expiry and complete payment inline.</span>
+            <span class="subtxt">Enter CVV and complete payment inline.</span>
           </button>
           <button class="flow-option" onclick="choosePaymentMode('payment_link')">Pay with payment link
             <span class="subtxt">Send secure link to +91 ${paymentSession.verifiedMobile}</span>
@@ -1706,7 +1734,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
         showTyping();
         setTimeout(() => {
           hideTyping();
-          addAgentMessage("Enter CVV and card expiry to confirm payment.");
+          addAgentMessage("Enter CVV in the chat box below to confirm payment.");
           addPayNowCard();
         }, 550);
       } else {
@@ -1717,6 +1745,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
 
     function addPayNowCard() {
       clearPaymentFlowCards();
+      setComposerMode("capture_cvv");
       const card = paymentSession.savedCards.find(c => c.id === paymentSession.selectedCardId);
       const addr = paymentSession.savedAddresses.find(a => a.id === paymentSession.selectedAddressId);
       const block = document.createElement("div");
@@ -1725,18 +1754,8 @@ Rules: keep concise, never ask card details, no invented numbers.`;
         <div class="flow-title">Pay Now</div>
         <div class="mobile-help">Card: ${card?.brand || "Card"} •••• ${card?.last4 || "----"} (${card?.bank || ""})</div>
         <div class="mobile-help">Address: ${addr?.label || ""} - ${addr?.line || ""}</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-          <div>
-            <label class="mobile-label" for="cvvInput">CVV</label>
-            <input class="mobile-input" id="cvvInput" type="password" inputmode="numeric" maxlength="4" placeholder="3/4 digits">
-          </div>
-          <div>
-            <label class="mobile-label" for="expiryInput">Expiry (MM/YY)</label>
-            <input class="mobile-input" id="expiryInput" type="text" inputmode="numeric" maxlength="5" placeholder="MM/YY">
-          </div>
-        </div>
+        <label class="mobile-label" style="margin-top:8px;">Enter CVV in the chat input below.</label>
         <div class="input-error" id="payNowError"></div>
-        <button class="pay-btn" onclick="submitPayNow()">Confirm Payment</button>
         <div class="flow-actions">
           <button class="chip" onclick="addPaymentModeCard()">Switch payment mode</button>
           <button class="chip" onclick="addSavedProfileCard()">Change card</button>
@@ -1747,31 +1766,14 @@ Rules: keep concise, never ask card details, no invented numbers.`;
       scrollToBottom();
     }
 
-    function submitPayNow() {
-      const cvv = (document.getElementById("cvvInput").value || "").trim();
-      const expiry = (document.getElementById("expiryInput").value || "").trim();
-      const err = document.getElementById("payNowError");
+    function submitPayNow(cvv) {
       const selectedCard = paymentSession.savedCards.find(c => c.id === paymentSession.selectedCardId);
       const expectedCvvLength = selectedCard?.brand === "AMEX" ? 4 : 3;
       if (!new RegExp(`^\\d{${expectedCvvLength}}$`).test(cvv)) {
-        err.textContent = `Please enter a valid ${expectedCvvLength}-digit CVV.`;
+        setStepError(`Please enter a valid ${expectedCvvLength}-digit CVV.`);
         return;
       }
-      if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
-        err.textContent = "Please enter a valid expiry in MM/YY.";
-        return;
-      }
-      const [mm, yy] = expiry.split("/");
-      const now = new Date();
-      const thisYear = now.getFullYear() % 100;
-      const thisMonth = now.getMonth() + 1;
-      const expMonth = Number(mm);
-      const expYear = Number(yy);
-      if (expYear < thisYear || (expYear === thisYear && expMonth < thisMonth)) {
-        err.textContent = "Card expiry is in the past. Please check and try again.";
-        return;
-      }
-      err.textContent = "";
+      setStepError("");
       addUserMessage("Confirm payment");
       showTyping();
       setTimeout(() => {
@@ -1781,7 +1783,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
     }
 
     function showPayNowSuccess() {
-      document.getElementById("inputWrap").classList.add("hidden");
+      setComposerMode("normal_chat");
       const messages = document.getElementById("messages");
       messages.innerHTML = "";
       const nextDebit = new Date();
@@ -1828,6 +1830,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
     }
 
     function checkPlansAgain() {
+      setComposerMode("normal_chat");
       clearPaymentFlowCards();
       document.querySelectorAll(".confirm").forEach(el => el.remove());
       addUserMessage("Check plans again");
@@ -1852,6 +1855,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
     }
 
     function compareCurrentBanks() {
+      setComposerMode("normal_chat");
       clearPaymentFlowCards();
       document.querySelectorAll(".chips").forEach(el => el.remove());
       addUserMessage("Compare current banks");
@@ -1868,6 +1872,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
 
     function chooseDifferentBanks() {
       clearVerificationState();
+      setComposerMode("normal_chat");
       clearPaymentFlowCards();
       document.querySelectorAll(".chips, .compare-wrap, .plans").forEach(el => el.remove());
       addUserMessage("Choose different banks");
@@ -1882,7 +1887,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
     }
 
     function showPaymentLinkScreen(mobileDigits) {
-      document.getElementById("inputWrap").classList.add("hidden");
+      setComposerMode("normal_chat");
 
       const messages = document.getElementById("messages");
       messages.innerHTML = "";
@@ -1916,6 +1921,11 @@ Rules: keep concise, never ask card details, no invented numbers.`;
       const sendBtn = document.getElementById("sendBtn");
       const text = input.value.trim();
       if (!text || isTyping) return;
+
+      if (composerMode !== "normal_chat") {
+        handleComposerCapture(text);
+        return;
+      }
 
       input.value = "";
       input.style.height = "auto";
@@ -1967,6 +1977,23 @@ Rules: keep concise, never ask card details, no invented numbers.`;
 
       sendBtn.disabled = false;
       input.focus();
+    }
+
+    function handleComposerCapture(rawText) {
+      const text = (rawText || "").trim();
+      const digits = text.replace(/\D/g, "");
+      if (composerMode === "capture_mobile") {
+        sendOtpToMobile(digits);
+        return;
+      }
+      if (composerMode === "capture_otp") {
+        verifyOtpAndFetchProfile(digits);
+        return;
+      }
+      if (composerMode === "capture_cvv") {
+        submitPayNow(digits);
+        return;
+      }
     }
 
     function addAgentMessage(text) {
