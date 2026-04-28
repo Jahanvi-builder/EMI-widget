@@ -520,11 +520,33 @@
       font-weight: 700;
       font-family: "Manrope", sans-serif;
       transition: all .2s;
+      position: relative;
     }
     .chip:hover {
       border-color: #8eb8a5;
       background: #dff2e9;
       transform: translateY(-1px);
+    }
+    .chip:focus-visible {
+      outline: 2px solid #42c5a3;
+      outline-offset: 2px;
+    }
+    .chip.active {
+      background: #dff6eb;
+      border-color: #39ae88;
+      color: #164938;
+      box-shadow: inset 0 0 0 1px rgba(57, 174, 136, 0.25);
+      padding-right: 28px;
+    }
+    .chip.active::after {
+      content: "✓";
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #1b7b60;
+      font-weight: 900;
+      font-size: 11px;
     }
 
     .plans {
@@ -843,10 +865,33 @@
       padding: 9px 10px;
       font-size: 12px;
       cursor: pointer;
+      position: relative;
     }
     .flow-option.active {
-      border-color: #72b497;
-      background: #ebf7f1;
+      border-color: #3fb08c;
+      background: #def5ea;
+      box-shadow: inset 0 0 0 1px rgba(63, 176, 140, 0.22);
+      padding-right: 30px;
+    }
+    .flow-option.active::after {
+      content: "✓";
+      position: absolute;
+      right: 10px;
+      top: 11px;
+      color: #17765d;
+      font-weight: 900;
+      font-size: 12px;
+    }
+    .flow-option .opt-title {
+      font-weight: 700;
+    }
+    .flow-option.active .opt-title {
+      font-weight: 800;
+      color: #184a3b;
+    }
+    .flow-option:focus-visible {
+      outline: 2px solid #45c7a5;
+      outline-offset: 2px;
     }
     .flow-option .subtxt {
       display: block;
@@ -885,6 +930,24 @@
     }
     .mode-cta.primary:hover {
       filter: brightness(0.97);
+    }
+    .mode-cta.active {
+      background: #dcf4e9;
+      border-color: #3fb08c;
+      color: #123f32;
+      box-shadow: inset 0 0 0 1px rgba(63, 176, 140, 0.22);
+      position: relative;
+      padding-right: 28px;
+    }
+    .mode-cta.active::after {
+      content: "✓";
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #17765d;
+      font-weight: 900;
+      font-size: 11px;
     }
     @media (max-width: 420px) {
       .mode-cta-row {
@@ -981,6 +1044,33 @@
       font-size: 11px;
       color: var(--widget-muted);
       font-weight: 600;
+    }
+    .link-countdown {
+      margin-top: -4px;
+      text-align: center;
+      font-family: "IBM Plex Mono", monospace;
+      color: #c73a3a;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      background: #ffe8e8;
+      border: 1px solid #f2b7b7;
+      border-radius: 999px;
+      padding: 4px 10px;
+      display: inline-block;
+      align-self: center;
+    }
+    .link-hint {
+      text-align: center;
+      color: #5a7569;
+      font-size: 11px;
+      margin-top: -6px;
+    }
+    .success.interactive {
+      cursor: pointer;
+    }
+    .success.interactive:hover {
+      background: linear-gradient(180deg, rgba(236, 247, 242, 0.4), transparent);
     }
     .success h3 {
       font-family: "Fraunces", serif;
@@ -1215,6 +1305,8 @@
     let isTyping = false;
     let paymentStage = "init";
     let composerMode = "normal_chat";
+    let linkCountdownTimer = null;
+    let linkCountdownRemaining = 0;
     let paymentSession = {
       verifiedMobile: null,
       otpVerified: false,
@@ -1251,12 +1343,14 @@ Rules: keep concise, never ask card details, no invented numbers.`;
     }
 
     function openWidget() {
+      clearLinkCountdown();
       document.getElementById("overlay").classList.add("open");
       setComposerMode("normal_chat");
       if (conversationHistory.length === 0) startConversation();
     }
 
     function closeWidget() {
+      clearLinkCountdown();
       document.getElementById("overlay").classList.remove("open");
     }
 
@@ -1278,8 +1372,11 @@ Rules: keep concise, never ask card details, no invented numbers.`;
       const row = document.createElement("div");
       row.className = "chips";
       const chips = banks
-        .filter(bank => !excludedBanks.includes(bank))
-        .map(bank => `<button class="chip" onclick="selectBank('${bank}')">${bank}</button>`);
+        .filter(bank => !excludedBanks.includes(bank) || comparisonBanks.includes(bank))
+        .map(bank => {
+          const isSelected = comparisonBanks.includes(bank);
+          return `<button class="chip ${isSelected ? "active" : ""}" onclick="${isSelected ? "return false" : `selectBank('${bank}')`}">${bank}</button>`;
+        });
       if (withContinue && comparisonBanks.length === 1) {
         chips.push(`<button class="chip" onclick="continueWithSingleBank()">Continue with ${comparisonBanks[0]}</button>`);
       }
@@ -1499,6 +1596,20 @@ Rules: keep concise, never ask card details, no invented numbers.`;
       document.querySelectorAll(".confirm, .flow-card, .otp-card, .profile-card, .mode-card, .paynow-card").forEach(el => el.remove());
     }
 
+    function clearLinkCountdown() {
+      if (linkCountdownTimer) {
+        clearInterval(linkCountdownTimer);
+        linkCountdownTimer = null;
+      }
+      linkCountdownRemaining = 0;
+    }
+
+    function formatCountdown(totalSeconds) {
+      const mm = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+      const ss = String(totalSeconds % 60).padStart(2, "0");
+      return `${mm}:${ss}`;
+    }
+
     function getProfileByMobile(mobile) {
       if (MOCK_USER_PROFILES[mobile]) return MOCK_USER_PROFILES[mobile];
       const last4 = mobile.slice(-4);
@@ -1633,7 +1744,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
       const cardsHtml = paymentSession.savedCards.length
         ? paymentSession.savedCards.map(card => `
           <button class="flow-option ${paymentSession.selectedCardId === card.id ? "active" : ""}" onclick="selectSavedCard('${card.id}')">
-            ${card.brand} •••• ${card.last4} (${card.bank}) ${card.isDefault ? "• Default" : ""}
+            <span class="opt-title">${card.brand} •••• ${card.last4} (${card.bank}) ${card.isDefault ? "• Default" : ""}</span>
             <span class="subtxt">Token: ${card.id}</span>
           </button>
         `).join("")
@@ -1641,7 +1752,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
       const addressHtml = paymentSession.savedAddresses.length
         ? paymentSession.savedAddresses.map(addr => `
           <button class="flow-option ${paymentSession.selectedAddressId === addr.id ? "active" : ""}" onclick="selectAddress('${addr.id}')">
-            ${addr.label} ${addr.isDefault ? "• Default" : ""}
+            <span class="opt-title">${addr.label} ${addr.isDefault ? "• Default" : ""}</span>
             <span class="subtxt">${addr.line}</span>
           </button>
         `).join("")
@@ -1656,8 +1767,8 @@ Rules: keep concise, never ask card details, no invented numbers.`;
         <div class="flow-list" style="margin-top:12px">${addressHtml}</div>
         <div class="input-error" id="profileError"></div>
         <div class="mode-cta-row">
-          <button class="mode-cta primary" onclick="choosePaymentMode('pay_now', true)">Pay now</button>
-          <button class="mode-cta" onclick="choosePaymentMode('payment_link', true)">Pay with payment link</button>
+          <button class="mode-cta ${paymentSession.paymentMode === "pay_now" ? "active" : "primary"}" onclick="choosePaymentMode('pay_now', true)">Pay now</button>
+          <button class="mode-cta ${paymentSession.paymentMode === "payment_link" ? "active" : ""}" onclick="choosePaymentMode('payment_link', true)">Pay with payment link</button>
         </div>
         <div class="flow-actions">
           <button class="chip" onclick="editMobile()">Edit mobile number</button>
@@ -1783,6 +1894,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
     }
 
     function showPayNowSuccess() {
+      clearLinkCountdown();
       setComposerMode("normal_chat");
       const messages = document.getElementById("messages");
       messages.innerHTML = "";
@@ -1830,6 +1942,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
     }
 
     function checkPlansAgain() {
+      clearLinkCountdown();
       setComposerMode("normal_chat");
       clearPaymentFlowCards();
       document.querySelectorAll(".confirm").forEach(el => el.remove());
@@ -1855,6 +1968,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
     }
 
     function compareCurrentBanks() {
+      clearLinkCountdown();
       setComposerMode("normal_chat");
       clearPaymentFlowCards();
       document.querySelectorAll(".chips").forEach(el => el.remove());
@@ -1871,6 +1985,7 @@ Rules: keep concise, never ask card details, no invented numbers.`;
     }
 
     function chooseDifferentBanks() {
+      clearLinkCountdown();
       clearVerificationState();
       setComposerMode("normal_chat");
       clearPaymentFlowCards();
@@ -1887,28 +2002,69 @@ Rules: keep concise, never ask card details, no invented numbers.`;
     }
 
     function showPaymentLinkScreen(mobileDigits) {
+      clearLinkCountdown();
       setComposerMode("normal_chat");
 
       const messages = document.getElementById("messages");
       messages.innerHTML = "";
 
+      const s = document.createElement("section");
+      s.className = "success interactive";
+      s.id = "linkSuccessCard";
+      const sentAt = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+      const shownMobile = mobileDigits || "9823397780";
+      s.innerHTML = `
+        <div class="check">📩<span class="sent-badge">⏱ Sent</span></div>
+        <div class="sent-time">Sent at ${sentAt}</div>
+        <div class="link-countdown" id="linkCountdown">10:00</div>
+        <div class="link-hint">Tap anywhere on this card to simulate payment done.</div>
+        <h3>Payment Link Sent</h3>
+        <p>Payment link sent on ${shownMobile}</p>
+        <div class="detail">
+          <div class="row"><span>Order ID</span><span>ORD-29874</span></div>
+          <div class="row"><span>First EMI</span><span>Rs.${selectedPlan.monthly.toLocaleString("en-IN")}</span></div>
+          <div class="row"><span>Time left</span><span id="linkCountdownInline">10:00</span></div>
+          <div class="row"><span>Bank</span><span>${selectedPlan.bank} card</span></div>
+          <div class="row"><span>Tenure</span><span>${selectedPlan.tenure} months</span></div>
+        </div>
+      `;
+      messages.appendChild(s);
+      linkCountdownRemaining = 600;
+      linkCountdownTimer = setInterval(() => {
+        linkCountdownRemaining -= 1;
+        const text = formatCountdown(Math.max(linkCountdownRemaining, 0));
+        const topEl = document.getElementById("linkCountdown");
+        const inlineEl = document.getElementById("linkCountdownInline");
+        if (topEl) topEl.textContent = text;
+        if (inlineEl) inlineEl.textContent = text;
+        if (linkCountdownRemaining <= 0) {
+          clearLinkCountdown();
+        }
+      }, 1000);
+      s.addEventListener("click", () => {
+        clearLinkCountdown();
+        showPaymentLinkDoneScreen(shownMobile);
+      });
+    }
+
+    function showPaymentLinkDoneScreen(mobileDigits) {
+      setComposerMode("normal_chat");
+      const messages = document.getElementById("messages");
+      messages.innerHTML = "";
       const nextDebit = new Date();
       nextDebit.setMonth(nextDebit.getMonth() + 1);
       nextDebit.setDate(5);
       const debitText = nextDebit.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-
       const s = document.createElement("section");
       s.className = "success";
-      const sentAt = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
       s.innerHTML = `
-        <div class="check">📩<span class="sent-badge">⏱ Sent</span></div>
-        <div class="sent-time">Sent at ${sentAt}</div>
-        <h3>Payment Link Sent</h3>
-        <p>We sent your secure payment link to +91 ${mobileDigits}. Complete payment there to finish checkout.</p>
+        <div class="check">✅<span class="sent-badge">Paid</span></div>
+        <h3>Payment Done</h3>
+        <p>Payment completed from link sent on ${mobileDigits}.</p>
         <div class="detail">
           <div class="row"><span>Order ID</span><span>ORD-29874</span></div>
           <div class="row"><span>First EMI</span><span>Rs.${selectedPlan.monthly.toLocaleString("en-IN")}</span></div>
-          <div class="row"><span>Link expiry</span><span>${debitText}</span></div>
+          <div class="row"><span>Next debit</span><span>${debitText}</span></div>
           <div class="row"><span>Bank</span><span>${selectedPlan.bank} card</span></div>
           <div class="row"><span>Tenure</span><span>${selectedPlan.tenure} months</span></div>
         </div>
